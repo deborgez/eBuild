@@ -43,26 +43,18 @@ async function getDashboardData() {
   }
 }
 
-function StatCard({ label, value, sub, color, icon }: {
-  label: string; value: string; sub?: string; color?: string; icon: string
+function StatCard({ label, value, sub, color }: {
+  label: string; value: string; sub?: string; color?: string
 }) {
   return (
     <div className="card p-5">
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
-            {label}
-          </p>
-          <p className="text-2xl font-bold mt-2 truncate" style={{ color: color ?? 'var(--color-text-primary)' }}>
-            {value}
-          </p>
-          {sub && <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{sub}</p>}
-        </div>
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ml-3 text-xl"
-          style={{ backgroundColor: 'var(--color-bg-header)' }}>
-          {icon}
-        </div>
-      </div>
+      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>
+        {label}
+      </p>
+      <p className="text-2xl font-bold mt-2 truncate" style={{ color: color ?? 'var(--color-text-primary)' }}>
+        {value}
+      </p>
+      {sub && <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{sub}</p>}
     </div>
   )
 }
@@ -101,13 +93,13 @@ export default async function DashboardPage() {
           Obras
         </p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total de obras" value={String(d.totalObras)} icon="🏗"
+          <StatCard label="Total de obras" value={String(d.totalObras)}
             sub={`${d.totalClientes} clientes`} />
-          <StatCard label="Em andamento" value={String(d.obrasEmAndamento)} icon="🔨"
+          <StatCard label="Em andamento" value={String(d.obrasEmAndamento)}
             color="var(--color-brand)" sub="obras ativas" />
-          <StatCard label="Pausadas" value={String(d.obrasPausadas)} icon="⏸"
+          <StatCard label="Pausadas" value={String(d.obrasPausadas)}
             color="#f59e0b" />
-          <StatCard label="Encerradas" value={String(d.obrasEncerradas)} icon="✅"
+          <StatCard label="Encerradas" value={String(d.obrasEncerradas)}
             color="#22c55e" />
         </div>
       </div>
@@ -118,9 +110,9 @@ export default async function DashboardPage() {
           Administração da construtora
         </p>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <StatCard label="Administração total" value={formatCurrency(d.administracaoTotal)} icon="📊" />
-          <StatCard label="Já recebida" value={formatCurrency(d.administracaoRecebida)} icon="✅" color="#22c55e" />
-          <StatCard label="A receber" value={formatCurrency(d.administracaoAReceber)} icon="⏳" color="#f59e0b" />
+          <StatCard label="Administração total" value={formatCurrency(d.administracaoTotal)} />
+          <StatCard label="Já recebida" value={formatCurrency(d.administracaoRecebida)} color="#22c55e" />
+          <StatCard label="A receber" value={formatCurrency(d.administracaoAReceber)} color="#f59e0b" />
         </div>
       </div>
 
