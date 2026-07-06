@@ -1,0 +1,143 @@
+/* src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Reset base: garante que o fundo cobre tudo, inclusive no dark mode ── */
+@layer base {
+  :root {
+    --color-bg: #f8f7f4;
+    --color-bg-card: #ffffff;
+    --color-bg-sidebar: #ffffff;
+    --color-bg-header: #f3f2ef;
+    --color-border: #e2e0d8;
+    --color-border-soft: #eeecea;
+    --color-text-primary: #1a1917;
+    --color-text-secondary: #5a5854;
+    --color-text-muted: #9c9890;
+    --color-brand: #4f51e5;
+    --color-brand-light: #eef0ff;
+  }
+
+  html.dark {
+    --color-bg: #111110;
+    --color-bg-card: #1c1b1a;
+    --color-bg-sidebar: #161514;
+    --color-bg-header: #222120;
+    --color-border: #2e2c2a;
+    --color-border-soft: #252320;
+    --color-text-primary: #e8e6e1;
+    --color-text-secondary: #a8a49e;
+    --color-text-muted: #6b6762;
+    --color-brand: #7f82f5;
+    --color-brand-light: #1e1f4a;
+  }
+
+  /* Garante que html E body preenchem com a cor de fundo correta */
+  html {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text-primary);
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text-primary);
+    min-height: 100vh;
+  }
+
+  /* Remove qualquer background branco que o Tailwind ou Next injete */
+  #__next,
+  main,
+  [data-nextjs-scroll-focus-boundary] {
+    background-color: var(--color-bg);
+    min-height: 100vh;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: var(--color-border);
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .card {
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    @apply rounded-xl shadow-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm
+           disabled:opacity-50 disabled:cursor-not-allowed transition-all;
+    background-color: var(--color-brand);
+    color: #ffffff;
+  }
+  .btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all;
+    background-color: var(--color-bg-card);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+  }
+  .btn-secondary:hover { background-color: var(--color-bg-header); }
+
+  .input {
+    @apply w-full px-3 py-2 rounded-lg text-sm transition-shadow
+           focus:outline-none focus:ring-2 focus:ring-offset-0;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    --tw-ring-color: var(--color-brand);
+  }
+  .input::placeholder { color: var(--color-text-muted); }
+  .input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  select.input option {
+    background-color: var(--color-bg-card);
+    color: var(--color-text-primary);
+  }
+
+  .label {
+    @apply block text-sm font-medium mb-1;
+    color: var(--color-text-secondary);
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           transition-colors cursor-pointer;
+    color: var(--color-text-secondary);
+  }
+  .sidebar-link:hover {
+    background-color: var(--color-bg-header);
+    color: var(--color-text-primary);
+  }
+  .sidebar-link.active {
+    color: var(--color-brand);
+    background-color: var(--color-brand-light);
+  }
+
+  .stat-card {
+    @apply card p-5;
+  }
+
+  .file-popup-overlay {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+  }
+
+  .file-popup-container {
+    @apply relative w-full max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl;
+    background-color: var(--color-bg-card);
+  }
+}

@@ -1,0 +1,220 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  role      Role     @default(CONSTRUTORA)
+  ativo     Boolean  @default(true)
+  telefone  String?
+  cnpj      String?
+  empresa   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@map("usuarios")
+}
+
+model Cliente {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String
+  whatsapp  String
+  cpfCnpj   String?  @map("cpf_cnpj")
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  obras     Obra[]
+  @@map("clientes")
+}
+
+model Obra {
+  id                    String     @id @default(uuid())
+  clienteId             String     @map("cliente_id")
+  nome                  String
+  endereco              String?
+  areaM2                Float      @map("area_m2")
+  prazoMeses            Int        @map("prazo_meses")
+  valorGlobalEstimado   Float      @map("valor_global_estimado")
+  custoBaseReferenciaM2 Float      @default(2100) @map("custo_base_referencia_m2")
+  valorVendaM2          Float?     @map("valor_venda_m2")
+  taxaAdministracaoPct  Float      @default(16) @map("taxa_administracao_pct")
+  status                ObraStatus @default(EM_ANDAMENTO)
+  dataInicio            DateTime?  @map("data_inicio")
+  dataEncerramento      DateTime?  @map("data_encerramento")
+  createdAt             DateTime   @default(now()) @map("created_at")
+  updatedAt             DateTime   @updatedAt @map("updated_at")
+  cliente               Cliente    @relation(fields: [clienteId], references: [id])
+  etapas                Etapa[]
+  lancamentos           Lancamento[]
+  faturasAdmin          FaturaAdmin[]
+  contratosGlobais      ContratoGlobal[]
+  @@map("obras")
+}
+
+model Etapa {
+  id                  String      @id @default(uuid())
+  obraId              String      @map("obra_id")
+  nome                String
+  descricao           String?
+  ordem               Int
+  percentualObra      Float       @default(0) @map("percentual_obra")
+  percentualConclusao Float       @default(0) @map("percentual_conclusao")
+  eDocumentacao       Boolean     @default(false) @map("e_documentacao")
+  status              EtapaStatus @default(PENDENTE)
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+  obra                Obra        @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  lancamentos         Lancamento[]
+  faturasAdmin        FaturaAdmin[]
+  @@map("etapas")
+}
+
+model ContratoGlobal {
+  id          String         @id @default(uuid())
+  obraId      String         @map("obra_id")
+  nome        String
+  fornecedor  String
+  tipo        LancamentoTipo
+  valorTotal  Float          @map("valor_total")
+  valorPago   Float          @default(0) @map("valor_pago")
+  arquivoUrl  String?        @map("arquivo_url")
+  status      ContratoStatus @default(ATIVO)
+  observacoes String?
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  obra        Obra           @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  parcelas    Lancamento[]
+  @@map("contratos_globais")
+}
+
+model Lancamento {
+  id               String           @id @default(uuid())
+  obraId           String           @map("obra_id")
+  etapaId          String?          @map("etapa_id")
+  contratoGlobalId String?          @map("contrato_global_id")
+  descricao        String
+  tipo             LancamentoTipo
+  valor            Float            @default(0)
+  fornecedor       String?
+  status           LancamentoStatus @default(PENDENTE)
+  comprovanteUrl   String?          @map("comprovante_url")
+  fotoUrl          String?          @map("foto_url")
+  observacoes      String?
+  isGlobal         Boolean          @default(false) @map("is_global")
+  isBenfeitoria    Boolean          @default(false) @map("is_benfeitoria")
+  modoComparativo  Boolean          @default(false) @map("modo_comparativo")
+  magicToken       String?          @unique @map("magic_token")
+  tokenExpiracao   DateTime?        @map("token_expiracao")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  obra             Obra             @relation(fields: [obraId], references: [id])
+  etapa            Etapa?           @relation(fields: [etapaId], references: [id])
+  contratoGlobal   ContratoGlobal?  @relation(fields: [contratoGlobalId], references: [id])
+  aprovacoes       Aprovacao[]
+  orcamentos       Orcamento[]
+  @@map("lancamentos")
+}
+
+model Orcamento {
+  id           String     @id @default(uuid())
+  lancamentoId String     @map("lancamento_id")
+  fornecedor   String
+  valor        Float
+  descricao    String?
+  arquivoUrl   String?    @map("arquivo_url")
+  ordem        Int        @default(0)
+  escolhido    Boolean    @default(false)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  lancamento   Lancamento @relation(fields: [lancamentoId], references: [id], onDelete: Cascade)
+  @@map("orcamentos")
+}
+
+model Aprovacao {
+  id           String        @id @default(uuid())
+  lancamentoId String        @map("lancamento_id")
+  orcamentoId  String?       @map("orcamento_id")
+  acao         AprovacaoAcao
+  ipCliente    String?       @map("ip_cliente")
+  userAgent    String?       @map("user_agent")
+  localizacao  String?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  lancamento   Lancamento    @relation(fields: [lancamentoId], references: [id])
+  @@map("aprovacoes")
+}
+
+model FaturaAdmin {
+  id               String           @id @default(uuid())
+  obraId           String           @map("obra_id")
+  etapaId          String?          @map("etapa_id")
+  baseCalculo      Float            @map("base_calculo")
+  taxaPct          Float            @map("taxa_pct")
+  valorTaxa        Float            @map("valor_taxa")
+  equalizacaoValor Float?           @default(0) @map("equalizacao_valor")
+  tipoEqualizacao  TipoEqualizacao? @map("tipo_equalizacao")
+  status           FaturaStatus     @default(PENDENTE)
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  obra             Obra             @relation(fields: [obraId], references: [id])
+  etapa            Etapa?           @relation(fields: [etapaId], references: [id])
+  @@map("faturas_admin")
+}
+
+enum Role {
+  ADMIN
+  CONSTRUTORA
+}
+
+enum ObraStatus {
+  EM_ANDAMENTO
+  PAUSADA
+  ENCERRADA
+}
+
+enum EtapaStatus {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+}
+
+enum LancamentoTipo {
+  MATERIAL
+  MAO_DE_OBRA
+}
+
+enum LancamentoStatus {
+  PENDENTE
+  APROVADO
+  REPROVADO
+  PAGO
+}
+
+enum AprovacaoAcao {
+  APROVADO
+  REPROVADO
+}
+
+enum TipoEqualizacao {
+  DESCONTO
+  BONUS
+}
+
+enum FaturaStatus {
+  PENDENTE
+  PAGA
+  CANCELADA
+}
+
+enum ContratoStatus {
+  ATIVO
+  ENCERRADO
+}
