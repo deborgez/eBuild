@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { CampoEndereco } from '@/components/ui/campo-endereco'
 
 interface Cliente { id: string; nome: string; email: string }
 
@@ -146,11 +147,8 @@ export default function NovaObraPage() {
         </div>
 
         {/* Endereço */}
-        <div>
-          <label className="label">Endereço</label>
-          <input type="text" name="endereco" value={form.endereco} onChange={handleChange}
-            placeholder="Rua, número, bairro — cidade, UF" className="input" />
-        </div>
+        <CampoEndereco endereco={form.endereco}
+          onChangeEndereco={(endereco) => setForm((p) => ({ ...p, endereco }))} />
 
         {/* Área com 2 casas decimais separadas */}
         <div>

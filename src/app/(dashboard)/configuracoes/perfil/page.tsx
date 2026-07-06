@@ -2,6 +2,7 @@
 // src/app/(dashboard)/configuracoes/perfil/page.tsx
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { maskCnpj, maskTelefone } from '@/lib/utils'
 
 export default function PerfilPage() {
   const { data: session, update } = useSession()
@@ -33,23 +34,6 @@ export default function PerfilPage() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
-  }
-
-  function formatCnpj(v: string) {
-    const nums = v.replace(/\D/g, '').slice(0, 14)
-    return nums
-      .replace(/(\d{2})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1/$2')
-      .replace(/(\d{4})(\d)/, '$1-$2')
-  }
-
-  function formatTelefone(v: string) {
-    const nums = v.replace(/\D/g, '').slice(0, 11)
-    if (nums.length <= 10) {
-      return nums.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2')
-    }
-    return nums.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -139,7 +123,7 @@ export default function PerfilPage() {
         <div>
           <label className="label">Telefone</label>
           <input type="text" value={form.telefone}
-            onChange={(e) => setForm((p) => ({ ...p, telefone: formatTelefone(e.target.value) }))}
+            onChange={(e) => setForm((p) => ({ ...p, telefone: maskTelefone(e.target.value) }))}
             placeholder="(11) 99999-9999" className="input" maxLength={15} />
         </div>
 
@@ -159,7 +143,7 @@ export default function PerfilPage() {
             <div>
               <label className="label">CNPJ</label>
               <input type="text" value={form.cnpj}
-                onChange={(e) => setForm((p) => ({ ...p, cnpj: formatCnpj(e.target.value) }))}
+                onChange={(e) => setForm((p) => ({ ...p, cnpj: maskCnpj(e.target.value) }))}
                 placeholder="00.000.000/0000-00" className="input" maxLength={18} />
             </div>
           </>

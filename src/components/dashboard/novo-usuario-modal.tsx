@@ -1,6 +1,7 @@
 'use client'
 // src/components/dashboard/novo-usuario-modal.tsx
 import { useState } from 'react'
+import { maskTelefone } from '@/lib/utils'
 
 export function NovoUsuarioModal() {
   const [aberto, setAberto] = useState(false)
@@ -70,9 +71,9 @@ export function NovoUsuarioModal() {
               </div>
               <div>
                 <label className="label">Telefone</label>
-                <input type="text" value={form.telefone}
-                  onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))}
-                  placeholder="(11) 99999-9999" className="input" />
+                <input type="text" inputMode="numeric" value={form.telefone}
+                  onChange={(e) => setForm((p) => ({ ...p, telefone: maskTelefone(e.target.value) }))}
+                  placeholder="(11) 99999-9999" className="input" maxLength={15} />
               </div>
               <div>
                 <label className="label">Senha *</label>

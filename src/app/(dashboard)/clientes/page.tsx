@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatCpfCnpj, maskWhatsapp } from '@/lib/utils'
 import { NovoClienteForm } from '@/components/dashboard/novo-cliente-form'
 
 export default async function ClientesPage() {
@@ -62,13 +62,13 @@ export default async function ClientesPage() {
                             </div>
                             <div>
                               <p className="font-medium text-concrete-900 text-sm">{c.nome}</p>
-                              {c.cpfCnpj && <p className="text-xs text-concrete-400">{c.cpfCnpj}</p>}
+                              {c.cpfCnpj && <p className="text-xs text-concrete-400">{formatCpfCnpj(c.cpfCnpj)}</p>}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <p className="text-sm text-concrete-700">{c.email}</p>
-                          <p className="text-xs text-concrete-400 mt-0.5">{c.whatsapp}</p>
+                          <p className="text-xs text-concrete-400 mt-0.5">{maskWhatsapp(c.whatsapp)}</p>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">

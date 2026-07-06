@@ -47,6 +47,71 @@ export function formatCpfCnpj(valor: string): string {
   return valor
 }
 
+/** Máscara de CPF/CNPJ para uso em onChange — formata progressivamente enquanto o usuário digita. */
+export function maskCpfCnpj(valor: string): string {
+  const digitos = valor.replace(/\D/g, '').slice(0, 14)
+  if (digitos.length <= 11) {
+    return digitos
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+  }
+  return digitos
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+}
+
+/** Máscara de CNPJ (sempre 14 dígitos) — para campos que nunca aceitam CPF, como dados de empresa. */
+export function maskCnpj(valor: string): string {
+  return valor.replace(/\D/g, '').slice(0, 14)
+    .replace(/(\d{2})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1.$2')
+    .replace(/(\d{3})(\d)/, '$1/$2')
+    .replace(/(\d{4})(\d{1,2})$/, '$1-$2')
+}
+
+/** Máscara de telefone fixo (10 dígitos) ou celular (11 dígitos), sem código do país. */
+export function maskTelefone(valor: string): string {
+  const digitos = valor.replace(/\D/g, '').slice(0, 11)
+  if (digitos.length <= 10) {
+    return digitos.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2')
+  }
+  return digitos.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
+}
+
+/** Máscara de WhatsApp com código do país (ex: 55 11 999990000 → +55 (11) 99999-0000). */
+export function maskWhatsapp(valor: string): string {
+  const digitos = valor.replace(/\D/g, '').slice(0, 13)
+  if (digitos.length <= 2) return digitos
+  const pais = digitos.slice(0, 2)
+  const resto = maskTelefone(digitos.slice(2))
+  return `+${pais}${resto ? ' ' + resto : ''}`
+}
+
+/** Máscara de CEP (00000-000). */
+export function maskCep(valor: string): string {
+  return valor.replace(/\D/g, '').slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2')
+}
+
+/** Busca endereço a partir de um CEP usando a API pública ViaCEP. Retorna null se inválido/não encontrado. */
+export async function buscarEnderecoPorCep(cep: string): Promise<{
+  logradouro: string; bairro: string; localidade: string; uf: string
+} | null> {
+  const digitos = cep.replace(/\D/g, '')
+  if (digitos.length !== 8) return null
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${digitos}/json/`)
+    if (!res.ok) return null
+    const data = await res.json()
+    if (data.erro) return null
+    return { logradouro: data.logradouro, bairro: data.bairro, localidade: data.localidade, uf: data.uf }
+  } catch {
+    return null
+  }
+}
+
 const UNIDADES = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove']
 const DEZ_A_DEZENOVE = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove']
 const DEZENAS = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa']

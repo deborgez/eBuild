@@ -2,6 +2,7 @@
 // src/components/dashboard/editar-obra-button.tsx
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { CampoEndereco } from '@/components/ui/campo-endereco'
 
 interface Obra {
   id: string; nome: string; endereco: string | null
@@ -94,10 +95,8 @@ export function EditarObraButton({ obra }: { obra: Obra }) {
                 <label className="label">Nome da obra</label>
                 <input type="text" name="nome" value={form.nome} onChange={handleText} className="input" />
               </div>
-              <div>
-                <label className="label">Endereço</label>
-                <input type="text" name="endereco" value={form.endereco} onChange={handleText} className="input" />
-              </div>
+              <CampoEndereco endereco={form.endereco}
+                onChangeEndereco={(endereco) => setForm((p) => ({ ...p, endereco }))} />
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">Área (m²)</label>

@@ -2,6 +2,7 @@
 // src/components/dashboard/novo-cliente-form.tsx
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { maskWhatsapp, maskCpfCnpj } from '@/lib/utils'
 
 export function NovoClienteForm() {
   const router = useRouter()
@@ -29,7 +30,7 @@ export function NovoClienteForm() {
     const res = await fetch('/api/clientes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, whatsapp: form.whatsapp.replace(/\D/g, '') }),
     })
 
     if (res.ok) {
@@ -61,14 +62,16 @@ export function NovoClienteForm() {
 
         <div>
           <label className="label">WhatsApp *</label>
-          <input type="text" name="whatsapp" value={form.whatsapp} onChange={handleChange}
-            placeholder="5511999990000" className="input" required />
-          <p className="text-xs text-concrete-400 mt-1">Com código do país: 55 + DDD + número</p>
+          <input type="text" inputMode="numeric" value={form.whatsapp}
+            onChange={(e) => setForm((p) => ({ ...p, whatsapp: maskWhatsapp(e.target.value) }))}
+            placeholder="+55 (11) 99999-0000" className="input" required />
+          <p className="text-xs text-concrete-400 mt-1">Com código do país</p>
         </div>
 
         <div>
           <label className="label">CPF / CNPJ</label>
-          <input type="text" name="cpfCnpj" value={form.cpfCnpj} onChange={handleChange}
+          <input type="text" inputMode="numeric" value={form.cpfCnpj}
+            onChange={(e) => setForm((p) => ({ ...p, cpfCnpj: maskCpfCnpj(e.target.value) }))}
             placeholder="000.000.000-00" className="input" />
         </div>
 

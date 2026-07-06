@@ -1,6 +1,7 @@
 'use client'
 // src/components/dashboard/usuario-acoes.tsx
 import { useState } from 'react'
+import { maskTelefone } from '@/lib/utils'
 
 interface Usuario {
   id: string; nome: string; email: string; telefone: string | null
@@ -95,8 +96,8 @@ export function UsuarioAcoes({ usuario, souEu }: { usuario: Usuario; souEu: bool
               </div>
               <div>
                 <label className="label">Telefone</label>
-                <input type="text" value={form.telefone}
-                  onChange={(e) => setForm((p) => ({ ...p, telefone: e.target.value }))}
+                <input type="text" inputMode="numeric" maxLength={15} value={form.telefone}
+                  onChange={(e) => setForm((p) => ({ ...p, telefone: maskTelefone(e.target.value) }))}
                   className="input" />
               </div>
               <div>
