@@ -28,7 +28,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     data: { magicToken: jti, tokenExpiracao: expiracao },
   })
 
-  const url = gerarUrl(token)
+  // Deriva o domínio a partir da própria requisição (funciona em qualquer ambiente,
+  // sem depender de uma variável de ambiente fixada em tempo de build).
+  const host = req.headers.get('host')
+  const protocolo = req.headers.get('x-forwarded-proto') ?? req.nextUrl.protocol.replace(':', '')
+  const baseUrl = host ? `${protocolo}://${host}` : undefined
+  const url = gerarUrl(token, baseUrl)
   const cliente = lancamento.obra.cliente
 
   // Log da URL gerada (em produção, enviar via WhatsApp/e-mail)

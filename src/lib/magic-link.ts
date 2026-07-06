@@ -34,7 +34,12 @@ export function validarMagicToken(token: string): MagicLinkPayload {
   return jwt.verify(token, SECRET) as MagicLinkPayload
 }
 
-export function gerarUrl(token: string): string {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+/**
+ * Monta a URL do link mágico. Recebe a base preferencialmente derivada da própria
+ * requisição (host real) — NEXT_PUBLIC_BASE_URL é resolvida em tempo de build pelo
+ * Next.js, então fica desatualizada se a variável mudar depois do deploy na Vercel.
+ */
+export function gerarUrl(token: string, baseUrl?: string): string {
+  const base = baseUrl || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
   return `${base}/aprovacao/${token}`
 }
