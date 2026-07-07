@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { recalcularTaxaEtapa, recalcularTaxaBenfeitoria, sincronizarStatusFatura, recalcularProgressoEtapa } from '@/lib/financeiro'
+import { recalcularTaxaEtapa, recalcularTaxaBenfeitorias, sincronizarStatusFatura, recalcularProgressoEtapa } from '@/lib/financeiro'
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     } else if (!isTaxa && body.status) {
       // Recalcula taxa (base ou de benfeitoria) e atualiza progresso
       if (lancamento.isBenfeitoria) {
-        await recalcularTaxaBenfeitoria(lancamento.id)
+        await recalcularTaxaBenfeitorias(lancamento.etapaId)
       } else {
         await recalcularTaxaEtapa(lancamento.etapaId)
       }
@@ -84,14 +84,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   if (lancamento.etapaId && !lancamento.descricao.startsWith('Taxa de Administração')) {
     if (lancamento.isBenfeitoria) {
-      // A benfeitoria foi removida — remove também sua taxa dedicada, se ainda não paga
-      const taxaVinculada = await prisma.lancamento.findFirst({
-        where: { etapaId: lancamento.etapaId, descricao: { endsWith: `— Benfeitoria: ${lancamento.descricao}` } },
-      })
-      if (taxaVinculada && taxaVinculada.status !== 'PAGO') {
-        await prisma.faturaAdmin.deleteMany({ where: { lancamentoId: taxaVinculada.id } })
-        await prisma.lancamento.delete({ where: { id: taxaVinculada.id } })
-      }
+      await recalcularTaxaBenfeitorias(lancamento.etapaId)
     } else {
       await recalcularTaxaEtapa(lancamento.etapaId)
     }

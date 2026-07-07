@@ -75,10 +75,17 @@ export async function recalcularTaxaEtapa(etapaId: string): Promise<void> {
     },
   }) > 0
 
-  const taxaExistente = await prisma.lancamento.findFirst({
-    where: { etapaId, descricao: { startsWith: 'Taxa de Administração' } },
+  // O filtro que exclui a marca de benfeitoria precisa estar no WHERE (não checado depois
+  // em JS): sem isso, com múltiplas linhas de taxa na etapa, o findFirst pode retornar uma
+  // linha de benfeitoria primeiro (ordem não garantida), fazendo o código achar que a taxa
+  // base não existe e criar uma duplicata a cada novo lançamento aprovado.
+  const taxaBaseExistente = await prisma.lancamento.findFirst({
+    where: {
+      etapaId,
+      descricao: { startsWith: 'Taxa de Administração' },
+      NOT: { descricao: { contains: MARCADOR_TAXA_BENFEITORIA } },
+    },
   })
-  const taxaBaseExistente = taxaExistente && ehTaxaBase(taxaExistente.descricao) ? taxaExistente : null
 
   if (!temAtividade || percentualObra <= 0) {
     if (taxaBaseExistente && taxaBaseExistente.status !== 'PAGO') {
@@ -119,26 +126,32 @@ export async function recalcularTaxaEtapa(etapaId: string): Promise<void> {
 }
 
 /**
- * Taxa de administração de uma benfeitoria: cobrada por lançamento (não pelo percentual
- * da etapa), pois é um valor não previsto no planejamento inicial da obra.
+ * Taxa de administração sobre as benfeitorias da etapa: cobrada sobre a soma dos valores
+ * de benfeitoria aprovados/pagos (não sobre o percentual da etapa, já que são valores não
+ * previstos no planejamento inicial). Aglutinada em UM único lançamento por etapa — cada
+ * nova benfeitoria aprovada apenas atualiza esse valor, em vez de gerar uma cobrança nova.
  */
-export async function recalcularTaxaBenfeitoria(lancamentoBenfeitoriaId: string): Promise<void> {
-  const lancBenfeitoria = await prisma.lancamento.findUnique({
-    where: { id: lancamentoBenfeitoriaId },
-    include: { etapa: { include: { obra: true } } },
+export async function recalcularTaxaBenfeitorias(etapaId: string): Promise<void> {
+  const etapa = await prisma.etapa.findUnique({
+    where: { id: etapaId },
+    include: { obra: true },
   })
-  if (!lancBenfeitoria || !lancBenfeitoria.isBenfeitoria || !lancBenfeitoria.etapaId || !lancBenfeitoria.etapa) return
+  if (!etapa || etapa.eDocumentacao) return
 
-  const taxaPct = lancBenfeitoria.etapa.obra.taxaAdministracaoPct
-  const marcador = `${MARCADOR_TAXA_BENFEITORIA} ${lancBenfeitoria.descricao}`
+  const taxaPct = etapa.obra.taxaAdministracaoPct
+
+  const benfeitorias = await prisma.lancamento.findMany({
+    where: { etapaId, isBenfeitoria: true, status: { in: ['APROVADO', 'PAGO'] } },
+    select: { valor: true },
+  })
+  const baseCalculo = parseFloat(benfeitorias.reduce((acc, l) => acc + l.valor, 0).toFixed(2))
+  const valorTaxa = parseFloat((baseCalculo * (taxaPct / 100)).toFixed(2))
 
   const taxaExistente = await prisma.lancamento.findFirst({
-    where: { etapaId: lancBenfeitoria.etapaId, descricao: { endsWith: marcador } },
+    where: { etapaId, descricao: { contains: MARCADOR_TAXA_BENFEITORIA } },
   })
 
-  const emValor = lancBenfeitoria.status === 'APROVADO' || lancBenfeitoria.status === 'PAGO'
-
-  if (!emValor) {
+  if (baseCalculo === 0) {
     if (taxaExistente && taxaExistente.status !== 'PAGO') {
       await prisma.faturaAdmin.deleteMany({ where: { lancamentoId: taxaExistente.id } })
       await prisma.lancamento.delete({ where: { id: taxaExistente.id } })
@@ -146,9 +159,7 @@ export async function recalcularTaxaBenfeitoria(lancamentoBenfeitoriaId: string)
     return
   }
 
-  const baseCalculo = lancBenfeitoria.valor
-  const valorTaxa = parseFloat((baseCalculo * (taxaPct / 100)).toFixed(2))
-  const obs = `Benfeitoria: R$ ${baseCalculo.toFixed(2)} × ${taxaPct}% = R$ ${valorTaxa.toFixed(2)}`
+  const obs = `Benfeitorias: R$ ${baseCalculo.toFixed(2)} × ${taxaPct}% = R$ ${valorTaxa.toFixed(2)}`
 
   if (taxaExistente) {
     if (taxaExistente.status !== 'PAGO') {
@@ -164,14 +175,14 @@ export async function recalcularTaxaBenfeitoria(lancamentoBenfeitoriaId: string)
   } else {
     const novaTaxa = await prisma.lancamento.create({
       data: {
-        obraId: lancBenfeitoria.obraId, etapaId: lancBenfeitoria.etapaId,
-        descricao: `Taxa de Administração (${taxaPct}%) ${marcador}`,
+        obraId: etapa.obraId, etapaId,
+        descricao: `Taxa de Administração (${taxaPct}%) ${MARCADOR_TAXA_BENFEITORIA} ${etapa.nome}`,
         tipo: 'MAO_DE_OBRA', valor: valorTaxa, fornecedor: 'Construtora',
         status: 'APROVADO', observacoes: obs, isGlobal: false,
       },
     })
     await prisma.faturaAdmin.create({
-      data: { obraId: lancBenfeitoria.obraId, etapaId: lancBenfeitoria.etapaId, lancamentoId: novaTaxa.id, baseCalculo, taxaPct, valorTaxa, equalizacaoValor: 0, status: 'PENDENTE' },
+      data: { obraId: etapa.obraId, etapaId, lancamentoId: novaTaxa.id, baseCalculo, taxaPct, valorTaxa, equalizacaoValor: 0, status: 'PENDENTE' },
     })
   }
 }

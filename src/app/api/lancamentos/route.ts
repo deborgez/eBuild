@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { recalcularTaxaEtapa, recalcularTaxaBenfeitoria } from '@/lib/financeiro'
+import { recalcularTaxaEtapa, recalcularTaxaBenfeitorias } from '@/lib/financeiro'
 import { z } from 'zod'
 
 const lancamentoSchema = z.object({
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
   // (o lançamento novo entra como PENDENTE, mas a taxa deve refletir o estado atual)
   if (lancamento.etapaId && !lancamento.descricao.startsWith('Taxa de Administração')) {
     if (lancamento.isBenfeitoria) {
-      await recalcularTaxaBenfeitoria(lancamento.id)
+      await recalcularTaxaBenfeitorias(lancamento.etapaId)
     } else {
       await recalcularTaxaEtapa(lancamento.etapaId)
     }

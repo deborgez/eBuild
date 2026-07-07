@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { validarMagicToken } from '@/lib/magic-link'
-import { recalcularTaxaEtapa, recalcularTaxaBenfeitoria } from '@/lib/financeiro'
+import { recalcularTaxaEtapa, recalcularTaxaBenfeitorias } from '@/lib/financeiro'
 
 export async function GET(req: NextRequest, { params }: { params: { token: string } }) {
   let payload: any
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   // atualizam a taxa "base" proporcional ao percentual da etapa.
   if (acao === 'APROVADO' && lancamento.etapaId) {
     if (lancamento.isBenfeitoria) {
-      await recalcularTaxaBenfeitoria(lancamento.id)
+      await recalcularTaxaBenfeitorias(lancamento.etapaId)
     } else {
       await recalcularTaxaEtapa(lancamento.etapaId)
     }
