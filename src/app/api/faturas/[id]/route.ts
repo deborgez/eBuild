@@ -20,8 +20,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!fatura) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
 
   // Garante que o status reflita o pagamento real do lançamento de taxa antes de exibir/imprimir
-  if (fatura.etapaId && fatura.tipoEqualizacao === null) {
-    await sincronizarStatusFatura(fatura.etapaId)
+  if (fatura.lancamentoId && fatura.tipoEqualizacao === null) {
+    await sincronizarStatusFatura(fatura.lancamentoId)
     fatura = await prisma.faturaAdmin.findUnique({
       where: { id: params.id },
       include: {

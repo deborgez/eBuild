@@ -66,13 +66,10 @@ export default async function ObraDetailPage({ params }: { params: { id: string 
   // Isso resolve o bug onde a fatura ficava "Pendente" mesmo após ser paga
   const faturasComStatusReal = await Promise.all(
     obra.faturasAdmin.map(async (f) => {
-      if (!f.etapaId || f.tipoEqualizacao !== null) return f
+      if (!f.lancamentoId || f.tipoEqualizacao !== null) return f
 
-      const lancamentoTaxa = await prisma.lancamento.findFirst({
-        where: {
-          etapaId: f.etapaId,
-          descricao: { startsWith: 'Taxa de Administração' },
-        },
+      const lancamentoTaxa = await prisma.lancamento.findUnique({
+        where: { id: f.lancamentoId },
         select: { status: true },
       })
 
@@ -203,6 +200,7 @@ export default async function ObraDetailPage({ params }: { params: { id: string 
               etapa={etapa as any}
               obraId={obra.id}
               taxaPct={obra.taxaAdministracaoPct}
+              valorGlobalEstimado={obra.valorGlobalEstimado}
             />
           ))}
           {etapasNormais.length === 0 && (

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { validarMagicToken } from '@/lib/magic-link'
-import { recalcularTaxaEtapa } from '@/lib/financeiro'
+import { recalcularTaxaEtapa, recalcularTaxaBenfeitoria } from '@/lib/financeiro'
 
 export async function GET(req: NextRequest, { params }: { params: { token: string } }) {
   let payload: any
@@ -116,10 +116,14 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     })
   })
 
-  // Recalcula a taxa da etapa: a base de cálculo inclui todo lançamento APROVADO ou PAGO,
-  // não apenas quando a etapa já está 100% concluída (ver OBRAGEST_RESUMO.md — Taxa de Administração)
+  // Recalcula a taxa: benfeitorias são cobradas por lançamento; demais lançamentos ativam/
+  // atualizam a taxa "base" proporcional ao percentual da etapa.
   if (acao === 'APROVADO' && lancamento.etapaId) {
-    await recalcularTaxaEtapa(lancamento.etapaId)
+    if (lancamento.isBenfeitoria) {
+      await recalcularTaxaBenfeitoria(lancamento.id)
+    } else {
+      await recalcularTaxaEtapa(lancamento.etapaId)
+    }
   }
 
   return NextResponse.json({

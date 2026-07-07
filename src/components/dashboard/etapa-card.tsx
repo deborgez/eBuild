@@ -29,8 +29,12 @@ interface Etapa {
   lancamentos: Lancamento[]
 }
 
-function calcularProgresso(lancamentos: Lancamento[], taxaPct: number) {
-  const lancTaxa = lancamentos.filter((l) => l.descricao.startsWith('Taxa de Administração'))
+function calcularProgresso(lancamentos: Lancamento[], taxaPct: number, percentualObra: number, valorGlobalEstimado: number) {
+  // Taxa "base" (proporcional ao percentual da etapa) x taxa de benfeitoria (por lançamento) —
+  // são cobranças independentes: a de benfeitoria não bloqueia a conclusão da etapa nem
+  // depende da existência da taxa base (e vice-versa).
+  const lancTaxaBase = lancamentos.filter((l) => l.descricao.startsWith('Taxa de Administração') && !l.descricao.includes('— Benfeitoria:'))
+  const lancTaxaBenfeitoria = lancamentos.filter((l) => l.descricao.includes('— Benfeitoria:'))
   // Lançamentos exibidos na lista principal (tudo, exceto a taxa) — inclui benfeitorias
   const lancObraTodos = lancamentos.filter((l) => !l.descricao.startsWith('Taxa de Administração'))
   // Benfeitorias são valores à parte: não somam no custo/progresso da etapa
@@ -44,12 +48,13 @@ function calcularProgresso(lancamentos: Lancamento[], taxaPct: number) {
   const totalBenfeitorias = lancBenfeitorias.reduce((acc, l) => acc + l.valor, 0)
   const totalBenfeitoriasPago = lancBenfeitorias.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
 
-  const taxaGerada = lancTaxa.length > 0
+  const taxaGerada = lancTaxaBase.length > 0
+  // Taxa base = % da etapa sobre o valor global da obra, não a soma dos lançamentos.
   const totalTaxa = taxaGerada
-    ? lancTaxa.reduce((acc, l) => acc + l.valor, 0)
-    : totalAprovadoObra * (taxaPct / 100)
-  const totalTaxaPago = lancTaxa.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
-  const taxaPaga = taxaGerada && lancTaxa.every((l) => l.status === 'PAGO')
+    ? lancTaxaBase.reduce((acc, l) => acc + l.valor, 0)
+    : (percentualObra / 100) * valorGlobalEstimado * (taxaPct / 100)
+  const totalTaxaPago = lancTaxaBase.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
+  const taxaPaga = taxaGerada && lancTaxaBase.every((l) => l.status === 'PAGO')
 
   const progressoObra = totalValorObra > 0 ? (totalPagoObra / totalValorObra) * 100 : 0
   const todosObraPagos = totalValorObra > 0 && totalPagoObra >= totalValorObra
@@ -60,12 +65,12 @@ function calcularProgresso(lancamentos: Lancamento[], taxaPct: number) {
     totalValorObra, totalPagoObra, totalAprovadoObra,
     totalTaxa, totalTaxaPago, taxaGerada, taxaPaga,
     totalBenfeitorias, totalBenfeitoriasPago,
-    lancObra, lancObraTodos, lancBenfeitorias, lancTaxa,
+    lancObra, lancObraTodos, lancBenfeitorias, lancTaxaBase, lancTaxaBenfeitoria,
   }
 }
 
-export function EtapaCard({ etapa, obraId, taxaPct = 16 }: {
-  etapa: Etapa; obraId: string; taxaPct?: number
+export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0 }: {
+  etapa: Etapa; obraId: string; taxaPct?: number; valorGlobalEstimado?: number
 }) {
   const [gerandoLink, setGerandoLink] = useState<string | null>(null)
   const [linkGerado, setLinkGerado] = useState<Record<string, string>>({})
@@ -81,8 +86,8 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16 }: {
     totalValorObra, totalPagoObra, totalAprovadoObra,
     totalTaxa, totalTaxaPago, taxaGerada, taxaPaga,
     totalBenfeitorias, totalBenfeitoriasPago,
-    lancObra, lancObraTodos, lancBenfeitorias, lancTaxa,
-  } = calcularProgresso(etapa.lancamentos, taxaPct)
+    lancObra, lancObraTodos, lancBenfeitorias, lancTaxaBase, lancTaxaBenfeitoria,
+  } = calcularProgresso(etapa.lancamentos, taxaPct, etapa.percentualObra ?? 0, valorGlobalEstimado)
 
   const progressoDisplay = etapaConcluida ? 100 : Math.min(progressoObra, 99)
   const statusCor = etapaConcluida ? 'bg-green-100 text-green-700'
@@ -446,7 +451,7 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16 }: {
       {!etapa.eDocumentacao && (
         <div className="border-t" style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-brand-light)' }}>
           {taxaGerada ? (
-            lancTaxa.map((l) => (
+            lancTaxaBase.map((l) => (
               <div key={l.id} className="px-5 py-3 flex items-center justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold" style={{ color: 'var(--color-brand)' }}>{l.descricao}</p>
@@ -490,6 +495,30 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16 }: {
               </div>
             </div>
           )}
+
+          {/* Taxa de benfeitorias: cobrança à parte, por lançamento — não bloqueia a etapa */}
+          {lancTaxaBenfeitoria.map((l) => (
+            <div key={l.id} className="px-5 py-3 flex items-center justify-between gap-4 border-t" style={{ borderColor: 'var(--color-border)' }}>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold" style={{ color: '#a855f7' }}>{l.descricao}</p>
+                {l.observacoes && (
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{l.observacoes}</p>
+                )}
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                  {l.status === 'PAGO' ? '✓ Taxa de benfeitoria paga' : 'Taxa sobre benfeitoria — à parte da etapa'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <p className="font-bold" style={{ color: '#a855f7' }}>{formatCurrency(l.valor)}</p>
+                <span className={cn('badge', STATUS_COLORS[l.status])}>{STATUS_LABELS[l.status]}</span>
+                {l.status === 'APROVADO' && (
+                  <button onClick={() => marcarPago(l.id)} className="btn-primary text-xs py-1.5 px-3">
+                    ✓ Pagar taxa
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
