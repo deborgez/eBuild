@@ -114,17 +114,13 @@ export default function RelatorioObraPage() {
                       <p className="text-xs text-gray-400">Administração já recebida</p>
                       <p className="font-bold text-green-600 mt-1">{formatCurrency(dados.financeiro.taxaAdminPaga)}</p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-xs text-gray-400">Administração a receber</p>
-                      <p className="font-bold text-amber-600 mt-1">{formatCurrency(dados.financeiro.administracaoRestante)}</p>
-                    </div>
                   </>
                 )}
               </div>
             </section>
 
-            {/* Contratos globais — só no relatório completo */}
-            {filtroEtapa === 'todas' && dados.contratos.length > 0 && (
+            {/* Contratos globais */}
+            {dados.contratos.length > 0 && (
               <section>
                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
                   Contratos Globais
