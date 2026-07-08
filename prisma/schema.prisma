@@ -108,6 +108,7 @@ model Lancamento {
   fornecedor       String?
   status           LancamentoStatus @default(PENDENTE)
   comprovanteUrl   String?          @map("comprovante_url")
+  comprovantePagamentoUrl String?   @map("comprovante_pagamento_url")
   fotoUrl          String?          @map("foto_url")
   observacoes      String?
   isGlobal         Boolean          @default(false) @map("is_global")

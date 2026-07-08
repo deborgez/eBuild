@@ -5,6 +5,7 @@ import { formatCurrency, formatDateTime, STATUS_LABELS, STATUS_COLORS } from '@/
 import { cn } from '@/lib/utils'
 import { FileViewer } from '@/components/ui/file-viewer'
 import { AnexarFotoModal } from '@/components/dashboard/anexar-foto-modal'
+import { AnexarComprovantePagamentoModal } from '@/components/dashboard/anexar-comprovante-pagamento-modal'
 import { NovoLancamentoModal } from '@/components/dashboard/novo-lancamento-modal'
 
 interface Orcamento {
@@ -16,6 +17,7 @@ interface Lancamento {
   id: string; descricao: string; tipo: string; valor: number
   fornecedor: string | null; status: string
   comprovanteUrl: string | null; fotoUrl: string | null
+  comprovantePagamentoUrl: string | null
   modoComparativo: boolean; observacoes: string | null
   contratoGlobalId: string | null
   isBenfeitoria: boolean
@@ -385,6 +387,17 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
                         </div>
                       )}
 
+                      {/* Comprovante de pagamento — anexado após marcar como pago */}
+                      {l.comprovantePagamentoUrl && (
+                        <div className="mt-1.5">
+                          <FileViewer url={l.comprovantePagamentoUrl} nome={`Comprovante de pagamento — ${l.descricao}`}>
+                            <span className="text-xs cursor-pointer hover:underline" style={{ color: 'var(--color-brand)' }}>
+                              🧾 Ver comprovante de pagamento
+                            </span>
+                          </FileViewer>
+                        </div>
+                      )}
+
                       {linkGerado[l.id] && (
                         <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
                           <p className="text-xs font-medium text-green-700 mb-1">✓ Link gerado:</p>
@@ -419,6 +432,14 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
                           <button onClick={() => marcarPago(l.id)} className="btn-primary text-xs py-1 px-2">
                             ✓ Pago
                           </button>
+                        )}
+                        {/* Comprovante de pagamento — só depois que o lançamento é marcado como pago */}
+                        {l.status === 'PAGO' && (
+                          <AnexarComprovantePagamentoModal
+                            lancamentoId={l.id}
+                            jaAnexado={!!l.comprovantePagamentoUrl}
+                            onSalvo={() => window.location.reload()}
+                          />
                         )}
                         {['PENDENTE', 'APROVADO'].includes(l.status) && (
                           <button onClick={() => abrirEdicao(l)} className="btn-secondary text-xs py-1 px-2" title="Editar">
