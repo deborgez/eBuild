@@ -268,9 +268,6 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
         )}
       </div>
 
-      <FotosEtapa etapaId={etapa.id} fotos={etapa.fotos ?? []} />
-      <DocumentosEtapa etapaId={etapa.id} documentos={etapa.documentos ?? []} />
-
       {/* ── Lançamentos de obra ── */}
       <div className="divide-y" style={{ borderColor: 'var(--color-border-soft)' }}>
         {lancObraTodos.length === 0 ? (
@@ -557,6 +554,9 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
           ))}
         </div>
       )}
+
+      <FotosEtapa etapaId={etapa.id} fotos={etapa.fotos ?? []} />
+      <DocumentosEtapa etapaId={etapa.id} documentos={etapa.documentos ?? []} />
 
       {/* ── Footer ── */}
       <div className="px-5 py-3 border-t flex justify-between items-center"
