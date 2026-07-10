@@ -14,6 +14,7 @@ interface RelatorioData {
   etapas: Array<{
     nome: string; descricao: string | null; percentualConclusao: number; percentualObra: number
     lancamentos: Array<{ descricao: string; valor: number; status: string; tipo: string; fornecedor: string | null }>
+    fotos: Array<{ url: string; descricao: string | null }>
   }>
   contratos: Array<{ nome: string; fornecedor: string; valorTotal: number; valorPagoReal: number }>
   documentacao: Array<{ descricao: string; valor: number; fornecedor: string | null; comprovanteUrl: string | null }>
@@ -105,16 +106,10 @@ export default function RelatorioObraPage() {
                   <p className="font-bold text-gray-900 mt-1">{formatCurrency(dados.financeiro.referenciaM2)}</p>
                 </div>
                 {dados.financeiro.administracaoTotal !== null && (
-                  <>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-xs text-gray-400">Administração total</p>
-                      <p className="font-bold text-indigo-600 mt-1">{formatCurrency(dados.financeiro.administracaoTotal)}</p>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-xs text-gray-400">Administração já recebida</p>
-                      <p className="font-bold text-green-600 mt-1">{formatCurrency(dados.financeiro.taxaAdminPaga)}</p>
-                    </div>
-                  </>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400">Administração já recebida</p>
+                    <p className="font-bold text-green-600 mt-1">{formatCurrency(dados.financeiro.taxaAdminPaga)}</p>
+                  </div>
                 )}
               </div>
             </section>
@@ -181,6 +176,16 @@ export default function RelatorioObraPage() {
                     </table>
                   ) : (
                     <p className="text-xs text-gray-400">Nenhum lançamento.</p>
+                  )}
+                  {etapa.fotos.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {etapa.fotos.map((f, k) => (
+                        <a key={k} href={f.url} target="_blank" rel="noopener noreferrer" title={f.descricao ?? undefined}>
+                          <img src={f.url} alt={f.descricao ?? `Foto ${k + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
+                        </a>
+                      ))}
+                    </div>
                   )}
                 </div>
               ))}

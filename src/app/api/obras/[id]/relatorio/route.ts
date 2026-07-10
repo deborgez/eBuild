@@ -15,7 +15,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       cliente: true,
       etapas: {
         orderBy: { ordem: 'asc' },
-        include: { lancamentos: { orderBy: { createdAt: 'asc' } } },
+        include: {
+          lancamentos: { orderBy: { createdAt: 'asc' } },
+          fotos: { orderBy: { createdAt: 'asc' } },
+        },
       },
       contratosGlobais: true,
     },
@@ -42,6 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       lancamentos: e.lancamentos
         .filter((l) => !l.descricao.startsWith('Taxa de Administração') && !l.isBenfeitoria)
         .map((l) => ({ descricao: l.descricao, valor: l.valor, status: l.status, tipo: l.tipo, fornecedor: l.fornecedor })),
+      fotos: e.fotos.map((f) => ({ url: f.url, descricao: f.descricao })),
     })),
     contratos: obra.contratosGlobais.map((c) => ({
       nome: c.nome, fornecedor: c.fornecedor, valorTotal: c.valorTotal, valorPagoReal: c.valorPago,
