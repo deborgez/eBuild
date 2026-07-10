@@ -44,6 +44,7 @@ export default async function ObraDetailPage({ params }: { params: { id: string 
             },
           },
           fotos: { orderBy: { createdAt: 'desc' } },
+          documentos: { orderBy: { createdAt: 'desc' } },
         },
       },
       // Busca faturas COM o lançamento de taxa correspondente para exibir status real

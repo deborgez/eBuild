@@ -77,6 +77,7 @@ model Etapa {
   lancamentos         Lancamento[]
   faturasAdmin        FaturaAdmin[]
   fotos               FotoEtapa[]
+  documentos          DocumentoEtapa[]
   @@map("etapas")
 }
 
@@ -182,6 +183,17 @@ model FotoEtapa {
   createdAt DateTime @default(now()) @map("created_at")
   etapa     Etapa    @relation(fields: [etapaId], references: [id], onDelete: Cascade)
   @@map("fotos_etapa")
+}
+
+// Arquivo documental por etapa — apenas para arquivo, não entra em nenhum cálculo/progresso.
+model DocumentoEtapa {
+  id        String   @id @default(uuid())
+  etapaId   String   @map("etapa_id")
+  nome      String
+  url       String
+  createdAt DateTime @default(now()) @map("created_at")
+  etapa     Etapa    @relation(fields: [etapaId], references: [id], onDelete: Cascade)
+  @@map("documentos_etapa")
 }
 
 enum Role {

@@ -7,6 +7,7 @@ import { FileViewer } from '@/components/ui/file-viewer'
 import { AnexarFotoModal } from '@/components/dashboard/anexar-foto-modal'
 import { AnexarComprovantePagamentoModal } from '@/components/dashboard/anexar-comprovante-pagamento-modal'
 import { FotosEtapa } from '@/components/dashboard/fotos-etapa'
+import { DocumentosEtapa } from '@/components/dashboard/documentos-etapa'
 import { NovoLancamentoModal } from '@/components/dashboard/novo-lancamento-modal'
 
 interface Orcamento {
@@ -30,11 +31,16 @@ interface FotoEtapa {
   id: string; url: string; descricao: string | null
 }
 
+interface DocumentoEtapa {
+  id: string; nome: string; url: string
+}
+
 interface Etapa {
   id: string; nome: string; descricao?: string | null; ordem: number
   percentualConclusao: number; percentualObra?: number; eDocumentacao: boolean; status: string
   lancamentos: Lancamento[]
   fotos?: FotoEtapa[]
+  documentos?: DocumentoEtapa[]
 }
 
 function calcularProgresso(lancamentos: Lancamento[], taxaPct: number, percentualObra: number, valorGlobalEstimado: number) {
@@ -263,6 +269,7 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
       </div>
 
       <FotosEtapa etapaId={etapa.id} fotos={etapa.fotos ?? []} />
+      <DocumentosEtapa etapaId={etapa.id} documentos={etapa.documentos ?? []} />
 
       {/* ── Lançamentos de obra ── */}
       <div className="divide-y" style={{ borderColor: 'var(--color-border-soft)' }}>
