@@ -272,7 +272,7 @@ export async function getResumoFinanceiro(obraId: string) {
 
   const parcelas = await prisma.lancamento.findMany({
     where: { obraId, contratoGlobalId: { not: null } },
-    select: { valor: true, status: true },
+    select: { valor: true, status: true, tipo: true },
   })
 
   const lancamentosDoc = await prisma.lancamento.findMany({
@@ -322,6 +322,13 @@ export async function getResumoFinanceiro(obraId: string) {
   const totalAvulsosPago = lancAvulsoObra.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
   const totalParcelasPagas = parcelas.filter((p) => p.status === 'PAGO').reduce((acc, p) => acc + p.valor, 0)
   const totalPago = totalAvulsosPago + totalParcelasPagas
+  // Total pago por tipo (material x mão de obra), somando avulsos + parcelas de contratos
+  const totalPagoMaterial =
+    lancAvulsoObra.filter((l) => l.status === 'PAGO' && l.tipo === 'MATERIAL').reduce((acc, l) => acc + l.valor, 0) +
+    parcelas.filter((p) => p.status === 'PAGO' && p.tipo === 'MATERIAL').reduce((acc, p) => acc + p.valor, 0)
+  const totalPagoMaoDeObra =
+    lancAvulsoObra.filter((l) => l.status === 'PAGO' && l.tipo === 'MAO_DE_OBRA').reduce((acc, l) => acc + l.valor, 0) +
+    parcelas.filter((p) => p.status === 'PAGO' && p.tipo === 'MAO_DE_OBRA').reduce((acc, p) => acc + p.valor, 0)
   const totalPendente = lancAvulsoObra.filter((l) => l.status === 'PENDENTE').reduce((acc, l) => acc + l.valor, 0)
   const totalAprovado = lancAvulsoObra.filter((l) => l.status === 'APROVADO').reduce((acc, l) => acc + l.valor, 0)
   const taxaAguardandoPagamento = lancTaxa.filter((l) => l.status === 'APROVADO').reduce((acc, l) => acc + l.valor, 0)
@@ -365,7 +372,7 @@ export async function getResumoFinanceiro(obraId: string) {
     valorGlobalEstimado: obra.valorGlobalEstimado,
     custoObra, custoAvulso, custoContratos, custoTaxa, custoDocumentacao,
     custoMaterial, custoMaoDeObra,
-    totalPago, totalPendente, totalAprovado, taxaAguardandoPagamento,
+    totalPago, totalPagoMaterial, totalPagoMaoDeObra, totalPendente, totalAprovado, taxaAguardandoPagamento,
     percentualGasto: obra.valorGlobalEstimado > 0 ? (custoObra / obra.valorGlobalEstimado) * 100 : 0,
     custoRealM2, referenciaM2, valorVendaM2,
     administracaoTotal,
