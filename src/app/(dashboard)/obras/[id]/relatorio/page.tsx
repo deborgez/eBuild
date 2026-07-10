@@ -150,7 +150,9 @@ export default function RelatorioObraPage() {
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
                 {filtroEtapa === 'todas' ? 'Cronograma e Lançamentos' : 'Lançamentos da Etapa'}
               </h2>
-              {etapasFiltradas.map((etapa, i) => (
+              {etapasFiltradas.map((etapa, i) => {
+                const totalPagoEtapa = etapa.lancamentos.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
+                return (
                 <div key={i} className="mb-5 last:mb-0">
                   <div className="flex justify-between items-center mb-2">
                     <p className="font-semibold text-gray-900">{etapa.nome}</p>
@@ -173,6 +175,13 @@ export default function RelatorioObraPage() {
                           </tr>
                         ))}
                       </tbody>
+                      <tfoot>
+                        <tr className="border-t border-gray-200">
+                          <td colSpan={2} className="pt-1.5 text-xs font-semibold text-gray-500">Total pago</td>
+                          <td className="pt-1.5 text-right font-bold text-green-600">{formatCurrency(totalPagoEtapa)}</td>
+                          <td className="pt-1.5"></td>
+                        </tr>
+                      </tfoot>
                     </table>
                   ) : (
                     <p className="text-xs text-gray-400">Nenhum lançamento.</p>
@@ -188,7 +197,7 @@ export default function RelatorioObraPage() {
                     </div>
                   )}
                 </div>
-              ))}
+              )})}
             </section>
 
             {/* Documentação — só no relatório completo */}
