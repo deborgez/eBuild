@@ -258,7 +258,12 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
 
             {todosObraPagos && taxaGerada && !taxaPaga && (
               <p className="text-xs text-amber-500 font-medium">
-                ⚠ Todos os lançamentos pagos. Pague a taxa para concluir a etapa.
+                ⚠ Custo previsto da etapa pago. Pague a taxa de administração para concluir a etapa.
+              </p>
+            )}
+            {totalBenfeitorias > 0 && totalBenfeitoriasPago < totalBenfeitorias && (
+              <p className="text-xs" style={{ color: '#a855f7' }}>
+                🏠 Há benfeitorias pendentes — não bloqueiam a conclusão da etapa.
               </p>
             )}
             {etapaConcluida && (
