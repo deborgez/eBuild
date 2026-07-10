@@ -76,6 +76,7 @@ model Etapa {
   obra                Obra        @relation(fields: [obraId], references: [id], onDelete: Cascade)
   lancamentos         Lancamento[]
   faturasAdmin        FaturaAdmin[]
+  fotos               FotoEtapa[]
   @@map("etapas")
 }
 
@@ -171,6 +172,16 @@ model FaturaAdmin {
   etapa            Etapa?           @relation(fields: [etapaId], references: [id])
   lancamento       Lancamento?      @relation(fields: [lancamentoId], references: [id])
   @@map("faturas_admin")
+}
+
+model FotoEtapa {
+  id        String   @id @default(uuid())
+  etapaId   String   @map("etapa_id")
+  url       String
+  descricao String?
+  createdAt DateTime @default(now()) @map("created_at")
+  etapa     Etapa    @relation(fields: [etapaId], references: [id], onDelete: Cascade)
+  @@map("fotos_etapa")
 }
 
 enum Role {

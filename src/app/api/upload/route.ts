@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData()
   const file = formData.get('file') as File | null
   const lancamentoId = formData.get('lancamentoId') as string | null
+  const etapaId = formData.get('etapaId') as string | null
 
   if (!file) return NextResponse.json({ error: 'Nenhum arquivo enviado' }, { status: 400 })
 
@@ -19,7 +20,8 @@ export async function POST(req: NextRequest) {
   if (erroValidacao) return NextResponse.json({ error: erroValidacao }, { status: 400 })
 
   const ext = file.name.split('.').pop()
-  const path = `lancamentos/${lancamentoId ?? 'temp'}/${Date.now()}.${ext}`
+  const pasta = lancamentoId ? `lancamentos/${lancamentoId}` : etapaId ? `etapas/${etapaId}` : 'temp'
+  const path = `${pasta}/${Date.now()}.${ext}`
 
   const arrayBuffer = await file.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)

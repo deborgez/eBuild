@@ -43,6 +43,7 @@ export default async function ObraDetailPage({ params }: { params: { id: string 
               orcamentos: { orderBy: { ordem: 'asc' } },
             },
           },
+          fotos: { orderBy: { createdAt: 'desc' } },
         },
       },
       // Busca faturas COM o lançamento de taxa correspondente para exibir status real
