@@ -16,23 +16,25 @@ export function FotosEtapa({ etapaId, fotos }: { etapaId: string; fotos: Foto[] 
   const [removendoId, setRemovendoId] = useState<string | null>(null)
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const arquivo = e.target.files?.[0]
+    const arquivos = Array.from(e.target.files ?? [])
     e.target.value = ''
-    if (!arquivo) return
+    if (arquivos.length === 0) return
 
     setEnviando(true)
-    const fd = new FormData()
-    fd.append('file', arquivo)
-    fd.append('etapaId', etapaId)
-    const r = await fetch('/api/upload', { method: 'POST', body: fd })
+    for (const arquivo of arquivos) {
+      const fd = new FormData()
+      fd.append('file', arquivo)
+      fd.append('etapaId', etapaId)
+      const r = await fetch('/api/upload', { method: 'POST', body: fd })
 
-    if (r.ok) {
-      const { url } = await r.json()
-      await fetch(`/api/etapas/${etapaId}/fotos`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      })
+      if (r.ok) {
+        const { url } = await r.json()
+        await fetch(`/api/etapas/${etapaId}/fotos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        })
+      }
     }
 
     setEnviando(false)
@@ -55,7 +57,7 @@ export function FotosEtapa({ etapaId, fotos }: { etapaId: string; fotos: Foto[] 
         </p>
         <label className="btn-secondary text-xs py-1 px-2 cursor-pointer">
           {enviando ? 'Enviando...' : '+ Adicionar foto'}
-          <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={enviando} />
+          <input type="file" accept="image/*" multiple className="hidden" onChange={handleUpload} disabled={enviando} />
         </label>
       </div>
 
