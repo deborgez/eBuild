@@ -162,6 +162,14 @@ export function FinanceiroPanel({ financeiro, taxaPct }: { financeiro: ResumoFin
             <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
               Aprovado: {formatCurrency(financeiro.benfeitorias.aprovado)}
             </p>
+            <div className="mt-2 pt-2 border-t flex justify-between text-xs" style={{ borderColor: 'var(--color-border)' }}>
+              <span style={{ color: 'var(--color-text-muted)' }}>
+                Material: <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{formatCurrency(financeiro.benfeitorias.materialPago)}</span>
+              </span>
+              <span style={{ color: 'var(--color-text-muted)' }}>
+                Mão de obra: <span className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{formatCurrency(financeiro.benfeitorias.maoDeObraPago)}</span>
+              </span>
+            </div>
           </div>
 
           <div className="stat-card">
