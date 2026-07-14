@@ -26,6 +26,7 @@ export function ContratosPanel({ obraId }: { obraId: string }) {
   const [contratos, setContratos] = useState<Contrato[]>([])
   const [expandido, setExpandido] = useState<string | null>(null)
   const [criando, setCriando] = useState(false)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [form, setForm] = useState({
@@ -50,25 +51,60 @@ export function ContratosPanel({ obraId }: { obraId: string }) {
     setForm((p) => ({ ...p, valorTotal: (parseInt(raw) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }))
   }
 
-  async function handleCriar(e: React.FormEvent) {
+  function abrirEdicao(c: Contrato) {
+    setEditandoId(c.id)
+    setForm({
+      nome: c.nome, fornecedor: c.fornecedor, tipo: c.tipo,
+      valorTotal: c.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
+      observacoes: c.observacoes ?? '',
+    })
+    setArquivo(null)
+    setCriando(true)
+  }
+
+  function fecharFormulario() {
+    setCriando(false)
+    setEditandoId(null)
+    setArquivo(null)
+    setForm({ nome: '', fornecedor: '', tipo: 'MAO_DE_OBRA', valorTotal: '', observacoes: '' })
+  }
+
+  async function handleSalvar(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
 
-    const fd = new FormData()
-    fd.append('obraId', obraId)
-    fd.append('nome', form.nome)
-    fd.append('fornecedor', form.fornecedor)
-    fd.append('tipo', form.tipo)
-    fd.append('valorTotal', String(parseMoeda(form.valorTotal)))
-    fd.append('observacoes', form.observacoes)
-    if (arquivo) fd.append('arquivo', arquivo)
+    if (editandoId) {
+      let arquivoUrl: string | undefined
+      if (arquivo) {
+        const fdUpload = new FormData()
+        fdUpload.append('file', arquivo)
+        const r = await fetch('/api/upload', { method: 'POST', body: fdUpload })
+        if (r.ok) arquivoUrl = (await r.json()).url
+      }
+      await fetch(`/api/contratos/${editandoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: form.nome, fornecedor: form.fornecedor, tipo: form.tipo,
+          valorTotal: parseMoeda(form.valorTotal), observacoes: form.observacoes || null,
+          ...(arquivoUrl && { arquivoUrl }),
+        }),
+      })
+    } else {
+      const fd = new FormData()
+      fd.append('obraId', obraId)
+      fd.append('nome', form.nome)
+      fd.append('fornecedor', form.fornecedor)
+      fd.append('tipo', form.tipo)
+      fd.append('valorTotal', String(parseMoeda(form.valorTotal)))
+      fd.append('observacoes', form.observacoes)
+      if (arquivo) fd.append('arquivo', arquivo)
 
-    await fetch('/api/contratos', { method: 'POST', body: fd })
+      await fetch('/api/contratos', { method: 'POST', body: fd })
+    }
 
     setLoading(false)
-    setCriando(false)
-    setArquivo(null)
-    setForm({ nome: '', fornecedor: '', tipo: 'MAO_DE_OBRA', valorTotal: '', observacoes: '' })
+    fecharFormulario()
     await carregar()
     router.refresh()
   }
@@ -94,7 +130,7 @@ export function ContratosPanel({ obraId }: { obraId: string }) {
             Contratos de obra toda — valor comprometido já entra no custo global
           </p>
         </div>
-        <button onClick={() => setCriando(true)} className="btn-secondary text-sm">+ Novo contrato</button>
+        <button onClick={() => { setEditandoId(null); setForm({ nome: '', fornecedor: '', tipo: 'MAO_DE_OBRA', valorTotal: '', observacoes: '' }); setArquivo(null); setCriando(true) }} className="btn-secondary text-sm">+ Novo contrato</button>
       </div>
 
       {contratos.length > 0 && (
@@ -152,6 +188,7 @@ export function ContratosPanel({ obraId }: { obraId: string }) {
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Total comprometido</p>
                     <p className="font-bold text-lg" style={{ color: 'var(--color-text-primary)' }}>{formatCurrency(c.valorTotal)}</p>
+                    <button onClick={() => abrirEdicao(c)} className="btn-secondary text-xs py-1 px-2 mt-1">✏️ Editar</button>
                   </div>
                 </div>
 
@@ -210,8 +247,10 @@ export function ContratosPanel({ obraId }: { obraId: string }) {
 
         {criando && (
           <div className="card p-5 border-2" style={{ borderColor: 'var(--color-brand)' }}>
-            <h3 className="font-semibold text-sm mb-4" style={{ color: 'var(--color-text-primary)' }}>Novo contrato global</h3>
-            <form onSubmit={handleCriar} className="space-y-4">
+            <h3 className="font-semibold text-sm mb-4" style={{ color: 'var(--color-text-primary)' }}>
+              {editandoId ? 'Editar contrato global' : 'Novo contrato global'}
+            </h3>
+            <form onSubmit={handleSalvar} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="label">Nome do contrato *</label>
@@ -249,7 +288,7 @@ export function ContratosPanel({ obraId }: { obraId: string }) {
 
               {/* Upload de arquivo */}
               <div>
-                <label className="label">Documento do contrato (PDF, foto, etc.)</label>
+                <label className="label">{editandoId ? 'Substituir documento do contrato' : 'Documento do contrato (PDF, foto, etc.)'}</label>
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
@@ -266,9 +305,9 @@ export function ContratosPanel({ obraId }: { obraId: string }) {
 
               <div className="flex gap-3">
                 <button type="submit" disabled={loading} className="btn-primary">
-                  {loading ? 'Salvando...' : 'Criar contrato'}
+                  {loading ? 'Salvando...' : editandoId ? 'Salvar alterações' : 'Criar contrato'}
                 </button>
-                <button type="button" onClick={() => setCriando(false)} className="btn-secondary">Cancelar</button>
+                <button type="button" onClick={fecharFormulario} className="btn-secondary">Cancelar</button>
               </div>
             </form>
           </div>

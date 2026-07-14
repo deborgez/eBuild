@@ -9,6 +9,7 @@ import { AnexarComprovantePagamentoModal } from '@/components/dashboard/anexar-c
 import { FotosEtapa } from '@/components/dashboard/fotos-etapa'
 import { DocumentosEtapa } from '@/components/dashboard/documentos-etapa'
 import { NovoLancamentoModal } from '@/components/dashboard/novo-lancamento-modal'
+import { EditarLancamentoModal } from '@/components/dashboard/editar-lancamento-modal'
 
 interface Orcamento {
   id: string; fornecedor: string; valor: number
@@ -89,9 +90,7 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
   const [gerandoLink, setGerandoLink] = useState<string | null>(null)
   const [linkGerado, setLinkGerado] = useState<Record<string, string>>({})
   const [expandidoOrc, setExpandidoOrc] = useState<string | null>(null)
-  const [editandoId, setEditandoId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ descricao: '', valor: '', fornecedor: '', observacoes: '' })
-  const [salvandoEdit, setSalvandoEdit] = useState(false)
+  const [editandoCompletoId, setEditandoCompletoId] = useState<string | null>(null)
   const [removendoId, setRemovendoId] = useState<string | null>(null)
   const [gerandoTaxa, setGerandoTaxa] = useState(false)
 
@@ -132,32 +131,8 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
     window.location.reload()
   }
 
-  function abrirEdicao(l: Lancamento) {
-    setEditandoId(l.id)
-    setEditForm({
-      descricao: l.descricao,
-      valor: l.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }),
-      fornecedor: l.fornecedor ?? '',
-      observacoes: l.observacoes ?? '',
-    })
-  }
-
-  async function salvarEdicao(lancamentoId: string) {
-    setSalvandoEdit(true)
-    const raw = editForm.valor.replace(/\./g, '').replace(',', '.')
-    await fetch(`/api/lancamentos/${lancamentoId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        descricao: editForm.descricao,
-        valor: parseFloat(raw) || 0,
-        fornecedor: editForm.fornecedor || null,
-        observacoes: editForm.observacoes || null,
-      }),
-    })
-    setSalvandoEdit(false)
-    setEditandoId(null)
-    window.location.reload()
+  function abrirEdicaoCompleta(l: Lancamento) {
+    setEditandoCompletoId(l.id)
   }
 
   async function removerLancamento(lancamentoId: string) {
@@ -166,12 +141,6 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
     await fetch(`/api/lancamentos/${lancamentoId}`, { method: 'DELETE' })
     setRemovendoId(null)
     window.location.reload()
-  }
-
-  function handleEditValor(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.value.replace(/\D/g, '')
-    if (!raw) { setEditForm((p) => ({ ...p, valor: '' })); return }
-    setEditForm((p) => ({ ...p, valor: (parseInt(raw) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) }))
   }
 
   return (
@@ -287,44 +256,6 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
         ) : (
           lancObraTodos.map((l) => (
             <div key={l.id}>
-              {editandoId === l.id ? (
-                <div className="px-5 py-4 space-y-3" style={{ backgroundColor: 'var(--color-brand-light)' }}>
-                  <p className="text-xs font-semibold" style={{ color: 'var(--color-brand)' }}>✏️ Editando</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <label className="label text-xs">Descrição</label>
-                      <input value={editForm.descricao}
-                        onChange={(e) => setEditForm((p) => ({ ...p, descricao: e.target.value }))}
-                        className="input text-sm" />
-                    </div>
-                    <div>
-                      <label className="label text-xs">Valor (R$)</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs" style={{ color: 'var(--color-text-muted)' }}>R$</span>
-                        <input value={editForm.valor} onChange={handleEditValor} className="input text-sm pl-8" inputMode="numeric" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="label text-xs">Fornecedor</label>
-                      <input value={editForm.fornecedor}
-                        onChange={(e) => setEditForm((p) => ({ ...p, fornecedor: e.target.value }))}
-                        className="input text-sm" />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="label text-xs">Observações</label>
-                      <input value={editForm.observacoes}
-                        onChange={(e) => setEditForm((p) => ({ ...p, observacoes: e.target.value }))}
-                        className="input text-sm" />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => salvarEdicao(l.id)} disabled={salvandoEdit} className="btn-primary text-xs py-1.5 px-3">
-                      {salvandoEdit ? 'Salvando...' : 'Salvar'}
-                    </button>
-                    <button onClick={() => setEditandoId(null)} className="btn-secondary text-xs py-1.5 px-3">Cancelar</button>
-                  </div>
-                </div>
-              ) : (
                 <div className="px-5 py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -458,18 +389,14 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
                             onSalvo={() => window.location.reload()}
                           />
                         )}
-                        {['PENDENTE', 'APROVADO'].includes(l.status) && (
-                          <button onClick={() => abrirEdicao(l)} className="btn-secondary text-xs py-1 px-2" title="Editar">
-                            ✏️
-                          </button>
-                        )}
-                        {l.status === 'PENDENTE' && (
-                          <button onClick={() => removerLancamento(l.id)} disabled={removendoId === l.id}
-                            className="text-xs py-1 px-2 rounded-lg border text-red-500 hover:bg-red-50 transition-colors"
-                            style={{ borderColor: '#fca5a5' }}>
-                            {removendoId === l.id ? '...' : '🗑'}
-                          </button>
-                        )}
+                        <button onClick={() => abrirEdicaoCompleta(l)} className="btn-secondary text-xs py-1 px-2" title="Editar">
+                          ✏️
+                        </button>
+                        <button onClick={() => removerLancamento(l.id)} disabled={removendoId === l.id}
+                          className="text-xs py-1 px-2 rounded-lg border text-red-500 hover:bg-red-50 transition-colors"
+                          style={{ borderColor: '#fca5a5' }}>
+                          {removendoId === l.id ? '...' : '🗑'}
+                        </button>
                         {l.comprovanteUrl && (
                           <FileViewer url={l.comprovanteUrl} nome={`NF — ${l.descricao}`}>
                             <span className="btn-secondary text-xs py-1 px-2 cursor-pointer">📄</span>
@@ -479,7 +406,6 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
                     </div>
                   </div>
                 </div>
-              )}
             </div>
           ))
         )}
@@ -587,6 +513,19 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
           />
         )}
       </div>
+
+      {editandoCompletoId && (() => {
+        const lancamentoEditando = etapa.lancamentos.find((l) => l.id === editandoCompletoId)
+        if (!lancamentoEditando) return null
+        return (
+          <EditarLancamentoModal
+            lancamento={lancamentoEditando}
+            eDocumentacao={etapa.eDocumentacao}
+            onFechar={() => setEditandoCompletoId(null)}
+            onSalvo={() => window.location.reload()}
+          />
+        )
+      })()}
     </div>
   )
 }

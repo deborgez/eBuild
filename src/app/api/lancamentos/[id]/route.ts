@@ -42,8 +42,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       // Sincroniza FaturaAdmin e atualiza progresso
       await sincronizarStatusFatura(lancamento.id)
       await recalcularProgressoEtapa(lancamento.etapaId)
-    } else if (!isTaxa && body.status) {
-      // Recalcula taxa (base ou de benfeitoria) e atualiza progresso
+    } else if (!isTaxa) {
+      // Qualquer edição de um lançamento normal (status, valor, tipo, benfeitoria...) pode
+      // afetar a taxa e o progresso da etapa — recalcula sempre, não só na troca de status.
       if (lancamento.isBenfeitoria) {
         await recalcularTaxaBenfeitorias(lancamento.etapaId)
       } else {
@@ -53,8 +54,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
-  // Atualiza valorPago do contrato global se parcela foi paga
-  if (body.status === 'PAGO' && lancamento.contratoGlobalId) {
+  // Atualiza valorPago do contrato global se a parcela mudou (pago ou valor editado)
+  if (lancamento.contratoGlobalId) {
     const parcelas = await prisma.lancamento.findMany({
       where: { contratoGlobalId: lancamento.contratoGlobalId, status: 'PAGO' },
       select: { valor: true },
@@ -76,10 +77,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const lancamento = await prisma.lancamento.findUnique({ where: { id: params.id } })
   if (!lancamento) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
 
-  if (!['PENDENTE', 'REPROVADO'].includes(lancamento.status)) {
-    return NextResponse.json({ error: 'Só é possível remover lançamentos pendentes ou reprovados.' }, { status: 400 })
-  }
-
   await prisma.lancamento.delete({ where: { id: params.id } })
 
   if (lancamento.etapaId && !lancamento.descricao.startsWith('Taxa de Administração')) {
@@ -89,6 +86,19 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       await recalcularTaxaEtapa(lancamento.etapaId)
     }
     await recalcularProgressoEtapa(lancamento.etapaId)
+  }
+
+  // Atualiza valorPago do contrato global caso a parcela removida estivesse paga
+  if (lancamento.contratoGlobalId) {
+    const parcelas = await prisma.lancamento.findMany({
+      where: { contratoGlobalId: lancamento.contratoGlobalId, status: 'PAGO' },
+      select: { valor: true },
+    })
+    const totalPago = parcelas.reduce((acc, p) => acc + p.valor, 0)
+    await prisma.contratoGlobal.update({
+      where: { id: lancamento.contratoGlobalId },
+      data: { valorPago: totalPago },
+    })
   }
 
   return NextResponse.json({ success: true })
