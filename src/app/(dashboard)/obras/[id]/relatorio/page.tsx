@@ -2,7 +2,7 @@
 // src/app/(dashboard)/obras/[id]/relatorio/page.tsx
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, STATUS_LABELS } from '@/lib/utils'
 
 interface RelatorioData {
   obra: {
@@ -95,7 +95,7 @@ export default function RelatorioObraPage() {
                 <div><span className="text-gray-400">Endereço:</span> <span className="font-medium text-gray-900">{dados.obra.endereco ?? '—'}</span></div>
                 <div><span className="text-gray-400">Prazo:</span> <span className="font-medium text-gray-900">{dados.obra.prazoMeses} meses</span></div>
                 <div><span className="text-gray-400">Início:</span> <span className="font-medium text-gray-900">{dados.obra.dataInicio ? formatDate(dados.obra.dataInicio) : '—'}</span></div>
-                <div><span className="text-gray-400">Status:</span> <span className="font-medium text-gray-900">{dados.obra.status}</span></div>
+                <div><span className="text-gray-400">Status:</span> <span className="font-medium text-gray-900">{STATUS_LABELS[dados.obra.status] ?? dados.obra.status}</span></div>
               </div>
             </section>
 
