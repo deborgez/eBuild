@@ -117,16 +117,6 @@ export default function RelatorioObraPage() {
                   <p className="text-xs text-gray-400">Custo real/m²</p>
                   <p className="font-bold text-gray-900 mt-1">{formatCurrency(dados.financeiro.custoRealM2)}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-400">Referência/m²</p>
-                  <p className="font-bold text-gray-900 mt-1">{formatCurrency(dados.financeiro.referenciaM2)}</p>
-                </div>
-                {dados.financeiro.administracaoTotal !== null && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs text-gray-400">Administração já recebida</p>
-                    <p className="font-bold text-green-600 mt-1">{formatCurrency(dados.financeiro.taxaAdminPaga)}</p>
-                  </div>
-                )}
               </div>
             </section>
 
