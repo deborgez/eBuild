@@ -168,6 +168,11 @@ export default function RelatorioObraPage() {
               </h2>
               {etapasFiltradas.map((etapa, i) => {
                 const totalPagoEtapa = etapa.lancamentos.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
+                const grupos = [
+                  { titulo: 'Da etapa', itens: etapa.lancamentos.filter((l) => l.categoria === 'NORMAL' || l.categoria === 'ADMINISTRACAO') },
+                  { titulo: 'Contrato', itens: etapa.lancamentos.filter((l) => l.categoria === 'CONTRATO') },
+                  { titulo: 'Benfeitoria', itens: etapa.lancamentos.filter((l) => l.categoria === 'BENFEITORIA' || l.categoria === 'ADMINISTRACAO_BENFEITORIA') },
+                ].filter((g) => g.itens.length > 0)
                 return (
                 <div key={i} className="mb-5 last:mb-0">
                   <div className="flex justify-between items-center mb-2">
@@ -176,36 +181,50 @@ export default function RelatorioObraPage() {
                   </div>
                   {etapa.descricao && <p className="text-xs text-gray-500 mb-2">{etapa.descricao}</p>}
                   {etapa.lancamentos.length > 0 ? (
-                    <table className="w-full text-sm table-fixed">
-                      <colgroup>
-                        <col style={{ width: '45%' }} /><col style={{ width: '20%' }} />
-                        <col style={{ width: '20%' }} /><col style={{ width: '15%' }} />
-                      </colgroup>
-                      <tbody className="divide-y divide-gray-100">
-                        {etapa.lancamentos.map((l, j) => (
-                          <tr key={j}>
-                            <td className="py-1.5 text-gray-700 truncate">
-                              {l.descricao}
-                              {CATEGORIA_LABEL[l.categoria] && (
-                                <span className={`ml-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded ${CATEGORIA_COR[l.categoria]}`}>
-                                  {CATEGORIA_LABEL[l.categoria]}
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-1.5 text-gray-400 text-xs truncate">{l.fornecedor ?? '—'}</td>
-                            <td className="py-1.5 text-right font-medium text-gray-900">{formatCurrency(l.valor)}</td>
-                            <td className="py-1.5 text-right text-xs text-gray-400">{l.status}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="border-t border-gray-200">
-                          <td colSpan={2} className="pt-1.5 text-xs font-semibold text-gray-500">Total pago</td>
-                          <td className="pt-1.5 text-right font-bold text-green-600">{formatCurrency(totalPagoEtapa)}</td>
-                          <td className="pt-1.5"></td>
-                        </tr>
-                      </tfoot>
-                    </table>
+                    <>
+                      {grupos.map((grupo, g) => {
+                        const totalGrupo = grupo.itens.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
+                        return (
+                          <div key={grupo.titulo} className={g > 0 ? 'mt-3 pt-3 border-t border-dashed border-gray-300' : ''}>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">{grupo.titulo}</p>
+                            <table className="w-full text-sm table-fixed">
+                              <colgroup>
+                                <col style={{ width: '45%' }} /><col style={{ width: '20%' }} />
+                                <col style={{ width: '20%' }} /><col style={{ width: '15%' }} />
+                              </colgroup>
+                              <tbody className="divide-y divide-gray-100">
+                                {grupo.itens.map((l, j) => (
+                                  <tr key={j}>
+                                    <td className="py-1.5 text-gray-700 truncate">
+                                      {l.descricao}
+                                      {CATEGORIA_LABEL[l.categoria] && (
+                                        <span className={`ml-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded ${CATEGORIA_COR[l.categoria]}`}>
+                                          {CATEGORIA_LABEL[l.categoria]}
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="py-1.5 text-gray-400 text-xs truncate">{l.fornecedor ?? '—'}</td>
+                                    <td className="py-1.5 text-right font-medium text-gray-900">{formatCurrency(l.valor)}</td>
+                                    <td className="py-1.5 text-right text-xs text-gray-400">{l.status}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                              <tfoot>
+                                <tr className="border-t border-gray-200">
+                                  <td colSpan={2} className="pt-1 text-xs text-gray-400">Pago — {grupo.titulo.toLowerCase()}</td>
+                                  <td className="pt-1 text-right text-xs font-semibold text-green-600">{formatCurrency(totalGrupo)}</td>
+                                  <td className="pt-1"></td>
+                                </tr>
+                              </tfoot>
+                            </table>
+                          </div>
+                        )
+                      })}
+                      <div className="mt-3 pt-2 border-t-2 border-gray-300 flex justify-between">
+                        <span className="text-xs font-semibold text-gray-500">Total pago da etapa</span>
+                        <span className="text-sm font-bold text-green-600">{formatCurrency(totalPagoEtapa)}</span>
+                      </div>
+                    </>
                   ) : (
                     <p className="text-xs text-gray-400">Nenhum lançamento.</p>
                   )}
