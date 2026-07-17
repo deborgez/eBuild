@@ -13,12 +13,26 @@ interface RelatorioData {
   financeiro: any
   etapas: Array<{
     nome: string; descricao: string | null; percentualConclusao: number; percentualObra: number
-    lancamentos: Array<{ descricao: string; valor: number; status: string; tipo: string; fornecedor: string | null }>
+    lancamentos: Array<{
+      descricao: string; valor: number; status: string; tipo: string; fornecedor: string | null
+      categoria: 'NORMAL' | 'CONTRATO' | 'BENFEITORIA' | 'ADMINISTRACAO'
+    }>
     fotos: Array<{ url: string; descricao: string | null }>
   }>
   contratos: Array<{ nome: string; fornecedor: string; valorTotal: number; valorPagoReal: number }>
   documentacao: Array<{ descricao: string; valor: number; fornecedor: string | null; comprovanteUrl: string | null }>
   benfeitorias: Array<{ descricao: string; valor: number; fornecedor: string | null; status: string; comprovanteUrl: string | null; etapaNome: string }>
+}
+
+const CATEGORIA_LABEL: Record<string, string> = {
+  CONTRATO: '📋 Contrato',
+  BENFEITORIA: '🏠 Benfeitoria',
+  ADMINISTRACAO: '💼 Administração',
+}
+const CATEGORIA_COR: Record<string, string> = {
+  CONTRATO: 'bg-purple-100 text-purple-700',
+  BENFEITORIA: 'bg-purple-100 text-purple-700',
+  ADMINISTRACAO: 'bg-indigo-100 text-indigo-700',
 }
 
 export default function RelatorioObraPage() {
@@ -168,7 +182,14 @@ export default function RelatorioObraPage() {
                       <tbody className="divide-y divide-gray-100">
                         {etapa.lancamentos.map((l, j) => (
                           <tr key={j}>
-                            <td className="py-1.5 text-gray-700 truncate">{l.descricao}</td>
+                            <td className="py-1.5 text-gray-700 truncate">
+                              {l.descricao}
+                              {CATEGORIA_LABEL[l.categoria] && (
+                                <span className={`ml-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded ${CATEGORIA_COR[l.categoria]}`}>
+                                  {CATEGORIA_LABEL[l.categoria]}
+                                </span>
+                              )}
+                            </td>
                             <td className="py-1.5 text-gray-400 text-xs truncate">{l.fornecedor ?? '—'}</td>
                             <td className="py-1.5 text-right font-medium text-gray-900">{formatCurrency(l.valor)}</td>
                             <td className="py-1.5 text-right text-xs text-gray-400">{l.status}</td>

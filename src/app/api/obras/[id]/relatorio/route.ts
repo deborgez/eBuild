@@ -42,9 +42,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       nome: e.nome, descricao: e.descricao,
       percentualConclusao: e.percentualConclusao,
       percentualObra: (e as any).percentualObra ?? 0,
-      lancamentos: e.lancamentos
-        .filter((l) => !l.descricao.startsWith('Taxa de Administração') && !l.isBenfeitoria)
-        .map((l) => ({ descricao: l.descricao, valor: l.valor, status: l.status, tipo: l.tipo, fornecedor: l.fornecedor })),
+      // Inclui todo lançamento da etapa (normal, contrato, benfeitoria e taxa de administração)
+      // para que o valor pago da taxa entre no total pago da etapa. Cada um é sinalizado com
+      // sua categoria para exibição no relatório.
+      lancamentos: e.lancamentos.map((l) => ({
+        descricao: l.descricao, valor: l.valor, status: l.status, tipo: l.tipo, fornecedor: l.fornecedor,
+        categoria: l.descricao.startsWith('Taxa de Administração') ? 'ADMINISTRACAO'
+          : l.isBenfeitoria ? 'BENFEITORIA'
+          : l.contratoGlobalId ? 'CONTRATO'
+          : 'NORMAL',
+      })),
       fotos: e.fotos.map((f) => ({ url: f.url, descricao: f.descricao })),
     })),
     contratos: obra.contratosGlobais.map((c) => ({
