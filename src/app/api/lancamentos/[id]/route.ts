@@ -77,7 +77,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const lancamento = await prisma.lancamento.findUnique({ where: { id: params.id } })
   if (!lancamento) return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
 
-  await prisma.lancamento.delete({ where: { id: params.id } })
+  try {
+    await prisma.lancamento.delete({ where: { id: params.id } })
+  } catch (error) {
+    console.error('Erro ao remover lançamento:', error)
+    return NextResponse.json({ error: 'Erro ao remover lançamento' }, { status: 500 })
+  }
 
   if (lancamento.etapaId && !lancamento.descricao.startsWith('Taxa de Administração')) {
     if (lancamento.isBenfeitoria) {

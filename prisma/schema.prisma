@@ -152,7 +152,7 @@ model Aprovacao {
   userAgent    String?       @map("user_agent")
   localizacao  String?
   createdAt    DateTime      @default(now()) @map("created_at")
-  lancamento   Lancamento    @relation(fields: [lancamentoId], references: [id])
+  lancamento   Lancamento    @relation(fields: [lancamentoId], references: [id], onDelete: Cascade)
   @@map("aprovacoes")
 }
 
@@ -171,7 +171,7 @@ model FaturaAdmin {
   updatedAt        DateTime         @updatedAt @map("updated_at")
   obra             Obra             @relation(fields: [obraId], references: [id])
   etapa            Etapa?           @relation(fields: [etapaId], references: [id])
-  lancamento       Lancamento?      @relation(fields: [lancamentoId], references: [id])
+  lancamento       Lancamento?      @relation(fields: [lancamentoId], references: [id], onDelete: Cascade)
   @@map("faturas_admin")
 }
 

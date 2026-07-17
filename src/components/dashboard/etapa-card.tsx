@@ -138,8 +138,12 @@ export function EtapaCard({ etapa, obraId, taxaPct = 16, valorGlobalEstimado = 0
   async function removerLancamento(lancamentoId: string) {
     if (!confirm('Remover este lançamento?')) return
     setRemovendoId(lancamentoId)
-    await fetch(`/api/lancamentos/${lancamentoId}`, { method: 'DELETE' })
+    const res = await fetch(`/api/lancamentos/${lancamentoId}`, { method: 'DELETE' })
     setRemovendoId(null)
+    if (!res.ok) {
+      alert('Não foi possível remover o lançamento. Tente novamente.')
+      return
+    }
     window.location.reload()
   }
 
