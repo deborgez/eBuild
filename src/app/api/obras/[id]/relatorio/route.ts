@@ -47,7 +47,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       // sua categoria para exibição no relatório.
       lancamentos: e.lancamentos.map((l) => ({
         descricao: l.descricao, valor: l.valor, status: l.status, tipo: l.tipo, fornecedor: l.fornecedor,
-        categoria: l.descricao.startsWith('Taxa de Administração') ? 'ADMINISTRACAO'
+        categoria: l.descricao.startsWith('Taxa de Administração')
+          ? (l.descricao.includes('— Benfeitoria:') ? 'ADMINISTRACAO_BENFEITORIA' : 'ADMINISTRACAO')
           : l.isBenfeitoria ? 'BENFEITORIA'
           : l.contratoGlobalId ? 'CONTRATO'
           : 'NORMAL',

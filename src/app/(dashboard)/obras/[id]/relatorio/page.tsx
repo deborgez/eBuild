@@ -15,7 +15,7 @@ interface RelatorioData {
     nome: string; descricao: string | null; percentualConclusao: number; percentualObra: number
     lancamentos: Array<{
       descricao: string; valor: number; status: string; tipo: string; fornecedor: string | null
-      categoria: 'NORMAL' | 'CONTRATO' | 'BENFEITORIA' | 'ADMINISTRACAO'
+      categoria: 'NORMAL' | 'CONTRATO' | 'BENFEITORIA' | 'ADMINISTRACAO' | 'ADMINISTRACAO_BENFEITORIA'
     }>
     fotos: Array<{ url: string; descricao: string | null }>
   }>
@@ -28,11 +28,13 @@ const CATEGORIA_LABEL: Record<string, string> = {
   CONTRATO: '📋 Contrato',
   BENFEITORIA: '🏠 Benfeitoria',
   ADMINISTRACAO: '💼 Administração',
+  ADMINISTRACAO_BENFEITORIA: '💼 Administração — Benfeitoria',
 }
 const CATEGORIA_COR: Record<string, string> = {
   CONTRATO: 'bg-purple-100 text-purple-700',
   BENFEITORIA: 'bg-purple-100 text-purple-700',
   ADMINISTRACAO: 'bg-indigo-100 text-indigo-700',
+  ADMINISTRACAO_BENFEITORIA: 'bg-indigo-100 text-indigo-700',
 }
 
 export default function RelatorioObraPage() {
