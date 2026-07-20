@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase'
-import { validarArquivo } from '@/lib/upload-validation'
+import { validarArquivo, ehArquivoHeic } from '@/lib/upload-validation'
+import convertHeic from 'heic-convert'
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,17 +21,32 @@ export async function POST(req: NextRequest) {
     const erroValidacao = validarArquivo(file)
     if (erroValidacao) return NextResponse.json({ error: erroValidacao }, { status: 400 })
 
-    const ext = file.name.split('.').pop()
     const pasta = lancamentoId ? `lancamentos/${lancamentoId}` : etapaId ? `etapas/${etapaId}` : 'temp'
-    const path = `${pasta}/${Date.now()}.${ext}`
 
     const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    let buffer = Buffer.from(arrayBuffer)
+    let ext = file.name.split('.').pop()
+    let contentType = file.type
+
+    // Fotos de iPhone vêm em HEIC por padrão — a maioria dos navegadores não consegue
+    // exibir esse formato, então convertemos para JPEG antes de salvar.
+    if (ehArquivoHeic(file)) {
+      try {
+        buffer = Buffer.from(await convertHeic({ buffer, format: 'JPEG', quality: 0.85 }))
+        ext = 'jpg'
+        contentType = 'image/jpeg'
+      } catch (err) {
+        console.error('Erro ao converter HEIC:', err)
+        return NextResponse.json({ error: 'Não foi possível converter a imagem HEIC. Tente exportar como JPG antes de enviar.' }, { status: 400 })
+      }
+    }
+
+    const path = `${pasta}/${Date.now()}.${ext}`
 
     const { error } = await supabaseAdmin.storage
       .from('comprovantes')
       .upload(path, buffer, {
-        contentType: file.type,
+        contentType,
         upsert: true,
       })
 

@@ -52,7 +52,7 @@ export function FotosEtapa({ etapaId, fotos }: { etapaId: string; fotos: Foto[] 
 
     setEnviando(false)
     if (erros.length > 0) {
-      alert(`Algumas fotos não foram enviadas:\n${erros.join('\n')}\n\nFotos no formato HEIC (padrão do iPhone) não são aceitas — exporte como JPG/PNG antes de enviar.`)
+      alert(`Algumas fotos não foram enviadas:\n${erros.join('\n')}`)
     }
     router.refresh()
   }
