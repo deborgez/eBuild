@@ -23,21 +23,30 @@ export function FotosEtapa({ etapaId, fotos }: { etapaId: string; fotos: Foto[] 
     setEnviando(true)
     const erros: string[] = []
     for (const arquivo of arquivos) {
-      const fd = new FormData()
-      fd.append('file', arquivo)
-      fd.append('etapaId', etapaId)
-      const r = await fetch('/api/upload', { method: 'POST', body: fd })
+      try {
+        const fd = new FormData()
+        fd.append('file', arquivo)
+        fd.append('etapaId', etapaId)
+        const r = await fetch('/api/upload', { method: 'POST', body: fd })
 
-      if (r.ok) {
+        if (!r.ok) {
+          const data = await r.json().catch(() => null)
+          erros.push(`${arquivo.name}: ${data?.error ?? `falha no upload (${r.status})`}`)
+          continue
+        }
+
         const { url } = await r.json()
-        await fetch(`/api/etapas/${etapaId}/fotos`, {
+        const r2 = await fetch(`/api/etapas/${etapaId}/fotos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url }),
         })
-      } else {
-        const data = await r.json().catch(() => null)
-        erros.push(`${arquivo.name}: ${data?.error ?? 'falha no upload'}`)
+        if (!r2.ok) {
+          const data2 = await r2.json().catch(() => null)
+          erros.push(`${arquivo.name}: falha ao salvar (${data2?.error ?? r2.status})`)
+        }
+      } catch (err) {
+        erros.push(`${arquivo.name}: erro de conexão (${err instanceof Error ? err.message : 'desconhecido'})`)
       }
     }
 
