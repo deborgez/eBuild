@@ -287,7 +287,10 @@ export default function RelatorioObraPage() {
                                         </span>
                                       )}
                                     </td>
-                                    <td className="py-1.5 pr-2 text-gray-400 truncate">{l.fornecedor ?? '—'}</td>
+                                    <td className="py-1.5 pr-2 text-gray-400 truncate">
+                                      {l.fornecedor ?? '—'}
+                                      <span className="block text-[9px] text-gray-400">{STATUS_LABELS[l.tipo] ?? l.tipo}</span>
+                                    </td>
                                     <td className="py-1.5 text-right font-medium text-gray-900">{formatCurrency(l.valor)}</td>
                                     <td className="py-1.5 text-right text-gray-400">{l.status}</td>
                                   </tr>
