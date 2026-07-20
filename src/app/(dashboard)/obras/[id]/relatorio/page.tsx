@@ -43,8 +43,8 @@ function FotoRelatorio({ url, alt }: { url: string; alt: string }) {
   const [paisagem, setPaisagem] = useState(true)
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" title={alt}
-      className="block self-start rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
-      style={{ aspectRatio: paisagem ? '16 / 9' : '9 / 16', width: paisagem ? 280 : 158 }}>
+      className="block w-full rounded-lg overflow-hidden border border-gray-200"
+      style={{ aspectRatio: paisagem ? '16 / 9' : '9 / 16' }}>
       <img
         src={url}
         alt={alt}
@@ -244,7 +244,7 @@ export default function RelatorioObraPage() {
                     <p className="text-xs text-gray-400">Nenhum lançamento.</p>
                   )}
                   {etapa.fotos.length > 0 && (
-                    <div className="flex flex-wrap items-start gap-3 mt-3">
+                    <div className="grid grid-cols-3 gap-3 mt-3">
                       {etapa.fotos.map((f, k) => (
                         <FotoRelatorio key={k} url={f.url} alt={f.descricao ?? `Foto ${k + 1}`} />
                       ))}
