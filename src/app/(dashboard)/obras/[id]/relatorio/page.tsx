@@ -30,7 +30,7 @@ const CATEGORIA_LABEL: Record<string, string> = {
   CONTRATO: '📋 Contrato',
   BENFEITORIA: '🏠 Benfeitoria',
   ADMINISTRACAO: '💼 Administração',
-  ADMINISTRACAO_BENFEITORIA: '💼 Administração — Benfeitoria',
+  ADMINISTRACAO_BENFEITORIA: '💼 Adm. benfeitoria',
 }
 const CATEGORIA_COR: Record<string, string> = {
   CONTRATO: 'bg-purple-100 text-purple-700',
@@ -209,13 +209,13 @@ export default function RelatorioObraPage() {
                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
                   Saldo dos Contratos Globais (com pagamento)
                 </h2>
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-xs table-fixed">
                   <colgroup>
                     <col style={{ width: '28%' }} /><col style={{ width: '18%' }} />
                     <col style={{ width: '18%' }} /><col style={{ width: '18%' }} /><col style={{ width: '18%' }} />
                   </colgroup>
                   <thead>
-                    <tr className="text-left text-gray-400 text-xs">
+                    <tr className="text-left text-gray-400">
                       <th className="pb-2">Contrato</th><th className="pb-2">Fornecedor</th>
                       <th className="pb-2 text-right">Comprometido</th><th className="pb-2 text-right">Pago</th>
                       <th className="pb-2 text-right">Saldo</th>
@@ -224,8 +224,8 @@ export default function RelatorioObraPage() {
                   <tbody className="divide-y divide-gray-100">
                     {dados.contratos.map((c, i) => (
                       <tr key={i}>
-                        <td className="py-2 text-gray-900 truncate">{c.nome}</td>
-                        <td className="py-2 text-gray-500 truncate">{c.fornecedor}</td>
+                        <td className="py-2 pr-2 text-gray-900 truncate">{c.nome}</td>
+                        <td className="py-2 pr-2 text-gray-500 truncate">{c.fornecedor}</td>
                         <td className="py-2 text-right font-medium text-gray-900">{formatCurrency(c.valorComprometido)}</td>
                         <td className="py-2 text-right text-green-600">{formatCurrency(c.valorPagoReal)}</td>
                         <td className={cn('py-2 text-right font-medium', c.saldoRestante < 0 ? 'text-red-600' : 'text-gray-900')}>
@@ -269,34 +269,34 @@ export default function RelatorioObraPage() {
                       {grupos.map((grupo, g) => {
                         const totalGrupo = grupo.itens.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
                         return (
-                          <div key={grupo.titulo} className={g > 0 ? 'mt-3 pt-3 border-t border-dashed border-gray-300' : ''}>
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">{grupo.titulo}</p>
-                            <table className="w-full text-sm table-fixed">
+                          <div key={grupo.titulo} className={g > 0 ? 'mt-6 pt-4 border-t border-dashed border-gray-300' : ''}>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">{grupo.titulo}</p>
+                            <table className="w-full text-xs table-fixed">
                               <colgroup>
-                                <col style={{ width: '45%' }} /><col style={{ width: '20%' }} />
-                                <col style={{ width: '20%' }} /><col style={{ width: '15%' }} />
+                                <col style={{ width: '48%' }} /><col style={{ width: '19%' }} />
+                                <col style={{ width: '20%' }} /><col style={{ width: '13%' }} />
                               </colgroup>
                               <tbody className="divide-y divide-gray-100">
                                 {grupo.itens.map((l, j) => (
                                   <tr key={j}>
-                                    <td className="py-1.5 text-gray-700 truncate">
+                                    <td className="py-1.5 pr-2 text-gray-700 truncate">
                                       {l.descricao}
                                       {CATEGORIA_LABEL[l.categoria] && (
-                                        <span className={`ml-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded ${CATEGORIA_COR[l.categoria]}`}>
+                                        <span className={`ml-1 inline-block text-[9px] font-medium px-1 py-0.5 rounded ${CATEGORIA_COR[l.categoria]}`}>
                                           {CATEGORIA_LABEL[l.categoria]}
                                         </span>
                                       )}
                                     </td>
-                                    <td className="py-1.5 text-gray-400 text-xs truncate">{l.fornecedor ?? '—'}</td>
+                                    <td className="py-1.5 pr-2 text-gray-400 truncate">{l.fornecedor ?? '—'}</td>
                                     <td className="py-1.5 text-right font-medium text-gray-900">{formatCurrency(l.valor)}</td>
-                                    <td className="py-1.5 text-right text-xs text-gray-400">{l.status}</td>
+                                    <td className="py-1.5 text-right text-gray-400">{l.status}</td>
                                   </tr>
                                 ))}
                               </tbody>
                               <tfoot>
                                 <tr className="border-t border-gray-200">
-                                  <td colSpan={2} className="pt-1 text-xs text-gray-400">Pago — {grupo.titulo.toLowerCase()}</td>
-                                  <td className="pt-1 text-right text-xs font-semibold text-green-600">{formatCurrency(totalGrupo)}</td>
+                                  <td colSpan={2} className="pt-1 text-gray-400">Pago — {grupo.titulo.toLowerCase()}</td>
+                                  <td className="pt-1 text-right font-semibold text-green-600">{formatCurrency(totalGrupo)}</td>
                                   <td className="pt-1"></td>
                                 </tr>
                               </tfoot>
@@ -329,15 +329,15 @@ export default function RelatorioObraPage() {
                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
                   Documentação / Taxas Extras
                 </h2>
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-xs table-fixed">
                   <colgroup>
                     <col style={{ width: '55%' }} /><col style={{ width: '25%' }} /><col style={{ width: '20%' }} />
                   </colgroup>
                   <tbody className="divide-y divide-gray-100">
                     {dados.documentacao.map((d, i) => (
                       <tr key={i}>
-                        <td className="py-1.5 text-gray-700 truncate">{d.descricao}</td>
-                        <td className="py-1.5 text-gray-400 text-xs truncate">{d.fornecedor ?? '—'}</td>
+                        <td className="py-1.5 pr-2 text-gray-700 truncate">{d.descricao}</td>
+                        <td className="py-1.5 pr-2 text-gray-400 truncate">{d.fornecedor ?? '—'}</td>
                         <td className="py-1.5 text-right font-medium text-gray-900">{formatCurrency(d.valor)}</td>
                       </tr>
                     ))}
@@ -369,13 +369,13 @@ export default function RelatorioObraPage() {
                     </p>
                   </div>
                 </div>
-                <table className="w-full text-sm table-fixed">
+                <table className="w-full text-xs table-fixed">
                   <colgroup>
                     <col style={{ width: '35%' }} /><col style={{ width: '20%' }} />
                     <col style={{ width: '25%' }} /><col style={{ width: '20%' }} />
                   </colgroup>
                   <thead>
-                    <tr className="text-left text-gray-400 text-xs">
+                    <tr className="text-left text-gray-400">
                       <th className="pb-2">Descrição</th><th className="pb-2">Etapa</th>
                       <th className="pb-2">Fornecedor</th><th className="pb-2 text-right">Valor</th>
                     </tr>
@@ -383,9 +383,9 @@ export default function RelatorioObraPage() {
                   <tbody className="divide-y divide-gray-100">
                     {dados.benfeitorias.map((b, i) => (
                       <tr key={i}>
-                        <td className="py-1.5 text-gray-700 truncate">{b.descricao}</td>
-                        <td className="py-1.5 text-gray-400 text-xs truncate">{b.etapaNome}</td>
-                        <td className="py-1.5 text-gray-400 text-xs truncate">{b.fornecedor ?? '—'}</td>
+                        <td className="py-1.5 pr-2 text-gray-700 truncate">{b.descricao}</td>
+                        <td className="py-1.5 pr-2 text-gray-400 truncate">{b.etapaNome}</td>
+                        <td className="py-1.5 pr-2 text-gray-400 truncate">{b.fornecedor ?? '—'}</td>
                         <td className="py-1.5 text-right font-medium text-gray-900">{formatCurrency(b.valor)}</td>
                       </tr>
                     ))}
