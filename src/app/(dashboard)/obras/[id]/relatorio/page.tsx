@@ -258,7 +258,7 @@ export default function RelatorioObraPage() {
                   { titulo: 'Benfeitoria', itens: etapa.lancamentos.filter((l) => l.categoria === 'BENFEITORIA' || l.categoria === 'ADMINISTRACAO_BENFEITORIA').sort(porUltimoSeTaxa) },
                 ].filter((g) => g.itens.length > 0)
                 return (
-                <div key={i} className="mb-5 last:mb-0">
+                <div key={i} className="mb-5 last:mb-0 break-inside-avoid">
                   <div className="flex justify-between items-center mb-2">
                     <p className="font-semibold text-gray-900">{etapa.nome}</p>
                     <span className="text-xs text-gray-500">{etapa.percentualConclusao.toFixed(0)}% concluída · {etapa.percentualObra}% da obra</span>
@@ -269,7 +269,7 @@ export default function RelatorioObraPage() {
                       {grupos.map((grupo, g) => {
                         const totalGrupo = grupo.itens.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
                         return (
-                          <div key={grupo.titulo} className={g > 0 ? 'mt-6 pt-4 border-t border-dashed border-gray-300' : ''}>
+                          <div key={grupo.titulo} className={cn('break-inside-avoid', g > 0 ? 'mt-6 pt-4 border-t border-dashed border-gray-300' : '')}>
                             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">{grupo.titulo}</p>
                             <table className="w-full text-xs table-fixed">
                               <colgroup>
@@ -410,6 +410,20 @@ export default function RelatorioObraPage() {
           body * { visibility: hidden; }
           #relatorio-print, #relatorio-print * { visibility: visible; }
           #relatorio-print { position: absolute; left: 0; top: 0; width: 100%; }
+
+          /* Evita que blocos (etapa, grupo de lançamentos, cards, fotos) sejam cortados
+             ao virar a página — se não couber inteiro, empurra pra próxima página. */
+          .break-inside-avoid,
+          section,
+          table,
+          tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          h2 {
+            break-after: avoid;
+            page-break-after: avoid;
+          }
         }
       `}</style>
     </div>
