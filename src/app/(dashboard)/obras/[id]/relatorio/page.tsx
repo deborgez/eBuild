@@ -146,10 +146,10 @@ export default function RelatorioObraPage() {
                     <div className={cn('h-2.5 rounded-full', (dados.financeiro.progressoGeral ?? 0) >= 100 ? 'bg-green-500' : 'bg-indigo-500')}
                       style={{ width: `${Math.min(dados.financeiro.progressoGeral ?? 0, 100)}%` }} />
                   </div>
-                  <div className="flex gap-3 mt-2 flex-wrap">
+                  <div className="flex gap-2 mt-2 flex-wrap">
                     {dados.etapas.map((e, i) => (
-                      <span key={i} className="text-xs text-gray-500">
-                        {e.nome}: {e.percentualConclusao.toFixed(0)}%{e.percentualObra > 0 ? ` (${e.percentualObra}% da obra)` : ''}
+                      <span key={i} className="text-[9px] text-gray-500 whitespace-nowrap">
+                        {e.nome}: {e.percentualConclusao.toFixed(0)}%{e.percentualObra > 0 ? ` (${e.percentualObra}%)` : ''}
                       </span>
                     ))}
                   </div>
