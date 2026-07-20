@@ -21,6 +21,7 @@ export function DocumentosEtapa({ etapaId, documentos }: { etapaId: string; docu
     if (arquivos.length === 0) return
 
     setEnviando(true)
+    const erros: string[] = []
     for (const arquivo of arquivos) {
       const fd = new FormData()
       fd.append('file', arquivo)
@@ -34,10 +35,16 @@ export function DocumentosEtapa({ etapaId, documentos }: { etapaId: string; docu
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nome: arquivo.name, url }),
         })
+      } else {
+        const data = await r.json().catch(() => null)
+        erros.push(`${arquivo.name}: ${data?.error ?? 'falha no upload'}`)
       }
     }
 
     setEnviando(false)
+    if (erros.length > 0) {
+      alert(`Alguns arquivos não foram enviados:\n${erros.join('\n')}`)
+    }
     router.refresh()
   }
 

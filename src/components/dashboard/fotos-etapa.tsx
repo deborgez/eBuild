@@ -21,6 +21,7 @@ export function FotosEtapa({ etapaId, fotos }: { etapaId: string; fotos: Foto[] 
     if (arquivos.length === 0) return
 
     setEnviando(true)
+    const erros: string[] = []
     for (const arquivo of arquivos) {
       const fd = new FormData()
       fd.append('file', arquivo)
@@ -34,10 +35,16 @@ export function FotosEtapa({ etapaId, fotos }: { etapaId: string; fotos: Foto[] 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url }),
         })
+      } else {
+        const data = await r.json().catch(() => null)
+        erros.push(`${arquivo.name}: ${data?.error ?? 'falha no upload'}`)
       }
     }
 
     setEnviando(false)
+    if (erros.length > 0) {
+      alert(`Algumas fotos não foram enviadas:\n${erros.join('\n')}\n\nFotos no formato HEIC (padrão do iPhone) não são aceitas — exporte como JPG/PNG antes de enviar.`)
+    }
     router.refresh()
   }
 

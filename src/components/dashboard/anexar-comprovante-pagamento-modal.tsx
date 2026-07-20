@@ -20,7 +20,14 @@ export function AnexarComprovantePagamentoModal({ lancamentoId, jaAnexado, onSal
       fd.append('file', arquivo)
       fd.append('lancamentoId', lancamentoId)
       const r = await fetch('/api/upload', { method: 'POST', body: fd })
-      if (r.ok) comprovantePagamentoUrl = (await r.json()).url
+      if (r.ok) {
+        comprovantePagamentoUrl = (await r.json()).url
+      } else {
+        const data = await r.json().catch(() => null)
+        alert(data?.error ?? 'Falha no upload do arquivo.')
+        setLoading(false)
+        return
+      }
     } else if (modo === 'link' && link.trim()) {
       comprovantePagamentoUrl = link.trim()
     }
