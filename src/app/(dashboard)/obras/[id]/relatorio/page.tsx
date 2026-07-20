@@ -182,6 +182,12 @@ export default function RelatorioObraPage() {
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-400">Custo real/m²</p>
                   <p className="font-bold text-gray-900 mt-1">{formatCurrency(dados.financeiro.custoRealM2)}</p>
+                  {dados.financeiro.custoObra > 0 && (
+                    <p className={cn('text-xs font-medium mt-2 pt-2 border-t border-gray-200',
+                      dados.financeiro.diferencaM2 > 0 ? 'text-red-600' : 'text-green-600')}>
+                      {dados.financeiro.diferencaM2 > 0 ? '▲' : '▼'} {formatCurrency(Math.abs(dados.financeiro.diferencaM2))}/m² {dados.financeiro.diferencaM2 > 0 ? 'acima' : 'abaixo'} do esperado
+                    </p>
+                  )}
                 </div>
               </div>
 
