@@ -20,7 +20,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           fotos: { orderBy: { createdAt: 'asc' } },
         },
       },
-      contratosGlobais: true,
+      contratosGlobais: {
+        include: { parcelas: { select: { valor: true, status: true } } },
+      },
     },
   })
 
@@ -55,9 +57,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       })),
       fotos: e.fotos.map((f) => ({ url: f.url, descricao: f.descricao })),
     })),
-    contratos: obra.contratosGlobais.map((c) => ({
-      nome: c.nome, fornecedor: c.fornecedor, valorTotal: c.valorTotal, valorPagoReal: c.valorPago,
-    })),
+    // Só entram contratos que já tiveram algum pagamento — mostra o comprometido (aprovado
+    // + pago), o pago e o saldo remanescente em relação ao valor total do contrato.
+    contratos: obra.contratosGlobais
+      .map((c) => {
+        const valorPagoReal = c.parcelas.filter((p) => p.status === 'PAGO').reduce((acc, p) => acc + p.valor, 0)
+        const valorComprometido = c.parcelas.filter((p) => ['APROVADO', 'PAGO'].includes(p.status)).reduce((acc, p) => acc + p.valor, 0)
+        return {
+          nome: c.nome, fornecedor: c.fornecedor, valorTotal: c.valorTotal,
+          valorPagoReal, valorComprometido, saldoRestante: c.valorTotal - valorComprometido,
+        }
+      })
+      .filter((c) => c.valorPagoReal > 0),
     documentacao: etapaDoc
       ? etapaDoc.lancamentos.map((l) => ({
           descricao: l.descricao, valor: l.valor, fornecedor: l.fornecedor, comprovanteUrl: l.comprovanteUrl,

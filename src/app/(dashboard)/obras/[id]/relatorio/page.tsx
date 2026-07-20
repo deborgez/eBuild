@@ -2,7 +2,9 @@
 // src/app/(dashboard)/obras/[id]/relatorio/page.tsx
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { formatCurrency, formatDate, STATUS_LABELS } from '@/lib/utils'
+import { formatCurrency, formatDate, formatPercent, STATUS_LABELS } from '@/lib/utils'
+import { PrazoIndicador } from '@/components/dashboard/prazo-indicador'
+import { cn } from '@/lib/utils'
 
 interface RelatorioData {
   obra: {
@@ -19,7 +21,7 @@ interface RelatorioData {
     }>
     fotos: Array<{ url: string; descricao: string | null }>
   }>
-  contratos: Array<{ nome: string; fornecedor: string; valorTotal: number; valorPagoReal: number }>
+  contratos: Array<{ nome: string; fornecedor: string; valorTotal: number; valorPagoReal: number; valorComprometido: number; saldoRestante: number }>
   documentacao: Array<{ descricao: string; valor: number; fornecedor: string | null; comprovanteUrl: string | null }>
   benfeitorias: Array<{ descricao: string; valor: number; fornecedor: string | null; status: string; comprovanteUrl: string | null; etapaNome: string }>
 }
@@ -117,6 +119,44 @@ export default function RelatorioObraPage() {
               </div>
             </section>
 
+            {/* Prazo */}
+            {dados.obra.dataInicio && dados.obra.status !== 'ENCERRADA' && (
+              <section>
+                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
+                  Prazo
+                </h2>
+                <PrazoIndicador dataInicio={dados.obra.dataInicio} prazoMeses={dados.obra.prazoMeses} status={dados.obra.status} />
+              </section>
+            )}
+
+            {/* Progresso geral da obra */}
+            {dados.etapas.length > 0 && (
+              <section>
+                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
+                  Progresso Geral da Obra
+                </h2>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold text-gray-900">Progresso</span>
+                    <span className={cn('text-lg font-bold', (dados.financeiro.progressoGeral ?? 0) >= 100 ? 'text-green-600' : 'text-indigo-600')}>
+                      {(dados.financeiro.progressoGeral ?? 0).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="rounded-full h-2.5 bg-gray-200">
+                    <div className={cn('h-2.5 rounded-full', (dados.financeiro.progressoGeral ?? 0) >= 100 ? 'bg-green-500' : 'bg-indigo-500')}
+                      style={{ width: `${Math.min(dados.financeiro.progressoGeral ?? 0, 100)}%` }} />
+                  </div>
+                  <div className="flex gap-3 mt-2 flex-wrap">
+                    {dados.etapas.map((e, i) => (
+                      <span key={i} className="text-xs text-gray-500">
+                        {e.nome}: {e.percentualConclusao.toFixed(0)}%{e.percentualObra > 0 ? ` (${e.percentualObra}% da obra)` : ''}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Resumo financeiro */}
             <section>
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
@@ -126,33 +166,53 @@ export default function RelatorioObraPage() {
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-400">Custo total da obra</p>
                   <p className="font-bold text-gray-900 mt-1">{formatCurrency(dados.financeiro.custoObra)}</p>
+                  <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500 space-y-0.5">
+                    <div>Material: <span className="font-semibold text-gray-900">{formatCurrency(dados.financeiro.custoMaterial)}</span></div>
+                    <div>Mão de obra: <span className="font-semibold text-gray-900">{formatCurrency(dados.financeiro.custoMaoDeObra)}</span></div>
+                  </div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-400">Total pago</p>
                   <p className="font-bold text-green-600 mt-1">{formatCurrency(dados.financeiro.totalPago)}</p>
+                  <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500 space-y-0.5">
+                    <div>Material: <span className="font-semibold text-gray-900">{formatCurrency(dados.financeiro.totalPagoMaterial)}</span></div>
+                    <div>Mão de obra: <span className="font-semibold text-gray-900">{formatCurrency(dados.financeiro.totalPagoMaoDeObra)}</span></div>
+                  </div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-400">Custo real/m²</p>
                   <p className="font-bold text-gray-900 mt-1">{formatCurrency(dados.financeiro.custoRealM2)}</p>
                 </div>
               </div>
+
+              {/* Saldo da obra (equalização) */}
+              {dados.financeiro.custoObra > 0 && dados.financeiro.tendenciaEqualizacao !== 'EQUILIBRADO' && (
+                <div className={cn('mt-3 rounded-lg p-3 border-l-4',
+                  dados.financeiro.tendenciaEqualizacao === 'POSITIVO' ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50')}>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Saldo da obra (projeção)</p>
+                  <p className={cn('text-lg font-bold mt-1', dados.financeiro.tendenciaEqualizacao === 'POSITIVO' ? 'text-green-600' : 'text-red-600')}>
+                    {dados.financeiro.tendenciaEqualizacao === 'POSITIVO' ? '+' : '-'}{formatCurrency(dados.financeiro.projecaoEqualizacao)}
+                  </p>
+                </div>
+              )}
             </section>
 
-            {/* Contratos globais */}
+            {/* Contratos globais com pagamento */}
             {dados.contratos.length > 0 && (
               <section>
                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
-                  Contratos Globais
+                  Saldo dos Contratos Globais (com pagamento)
                 </h2>
                 <table className="w-full text-sm table-fixed">
                   <colgroup>
-                    <col style={{ width: '35%' }} /><col style={{ width: '25%' }} />
-                    <col style={{ width: '20%' }} /><col style={{ width: '20%' }} />
+                    <col style={{ width: '28%' }} /><col style={{ width: '18%' }} />
+                    <col style={{ width: '18%' }} /><col style={{ width: '18%' }} /><col style={{ width: '18%' }} />
                   </colgroup>
                   <thead>
                     <tr className="text-left text-gray-400 text-xs">
                       <th className="pb-2">Contrato</th><th className="pb-2">Fornecedor</th>
-                      <th className="pb-2 text-right">Total</th><th className="pb-2 text-right">Pago</th>
+                      <th className="pb-2 text-right">Comprometido</th><th className="pb-2 text-right">Pago</th>
+                      <th className="pb-2 text-right">Saldo</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -160,8 +220,11 @@ export default function RelatorioObraPage() {
                       <tr key={i}>
                         <td className="py-2 text-gray-900 truncate">{c.nome}</td>
                         <td className="py-2 text-gray-500 truncate">{c.fornecedor}</td>
-                        <td className="py-2 text-right font-medium text-gray-900">{formatCurrency(c.valorTotal)}</td>
+                        <td className="py-2 text-right font-medium text-gray-900">{formatCurrency(c.valorComprometido)}</td>
                         <td className="py-2 text-right text-green-600">{formatCurrency(c.valorPagoReal)}</td>
+                        <td className={cn('py-2 text-right font-medium', c.saldoRestante < 0 ? 'text-red-600' : 'text-gray-900')}>
+                          {formatCurrency(c.saldoRestante)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -283,6 +346,23 @@ export default function RelatorioObraPage() {
                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-3 pb-2 border-b border-gray-200">
                   Benfeitorias (valores à parte)
                 </h2>
+                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400">Total de benfeitorias</p>
+                    <p className="font-bold text-gray-900 mt-1">{formatCurrency(dados.financeiro.benfeitorias.custoTotal)}</p>
+                    <div className="mt-2 pt-2 border-t border-gray-200 text-xs text-gray-500 space-y-0.5">
+                      <div>Material: <span className="font-semibold text-gray-900">{formatCurrency(dados.financeiro.benfeitorias.materialPago)}</span></div>
+                      <div>Mão de obra: <span className="font-semibold text-gray-900">{formatCurrency(dados.financeiro.benfeitorias.maoDeObraPago)}</span></div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs text-gray-400">Pago</p>
+                    <p className="font-bold text-green-600 mt-1">{formatCurrency(dados.financeiro.benfeitorias.pago)}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formatPercent(dados.financeiro.benfeitorias.percentualPago)} do total
+                    </p>
+                  </div>
+                </div>
                 <table className="w-full text-sm table-fixed">
                   <colgroup>
                     <col style={{ width: '35%' }} /><col style={{ width: '20%' }} />
