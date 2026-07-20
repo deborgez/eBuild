@@ -158,10 +158,17 @@ export default function RelatorioObraPage() {
               </h2>
               {etapasFiltradas.map((etapa, i) => {
                 const totalPagoEtapa = etapa.lancamentos.filter((l) => l.status === 'PAGO').reduce((acc, l) => acc + l.valor, 0)
+                // A taxa de administração (base ou de benfeitoria) sempre aparece por último
+                // dentro do seu grupo, já que é cobrada sobre o que veio antes.
+                const porUltimoSeTaxa = (a: { categoria: string }, b: { categoria: string }) => {
+                  const aEhTaxa = a.categoria === 'ADMINISTRACAO' || a.categoria === 'ADMINISTRACAO_BENFEITORIA'
+                  const bEhTaxa = b.categoria === 'ADMINISTRACAO' || b.categoria === 'ADMINISTRACAO_BENFEITORIA'
+                  return (aEhTaxa ? 1 : 0) - (bEhTaxa ? 1 : 0)
+                }
                 const grupos = [
-                  { titulo: 'Da etapa', itens: etapa.lancamentos.filter((l) => l.categoria === 'NORMAL' || l.categoria === 'ADMINISTRACAO') },
+                  { titulo: 'Da etapa', itens: etapa.lancamentos.filter((l) => l.categoria === 'NORMAL' || l.categoria === 'ADMINISTRACAO').sort(porUltimoSeTaxa) },
                   { titulo: 'Contrato', itens: etapa.lancamentos.filter((l) => l.categoria === 'CONTRATO') },
-                  { titulo: 'Benfeitoria', itens: etapa.lancamentos.filter((l) => l.categoria === 'BENFEITORIA' || l.categoria === 'ADMINISTRACAO_BENFEITORIA') },
+                  { titulo: 'Benfeitoria', itens: etapa.lancamentos.filter((l) => l.categoria === 'BENFEITORIA' || l.categoria === 'ADMINISTRACAO_BENFEITORIA').sort(porUltimoSeTaxa) },
                 ].filter((g) => g.itens.length > 0)
                 return (
                 <div key={i} className="mb-5 last:mb-0">
