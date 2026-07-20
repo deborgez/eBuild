@@ -37,6 +37,24 @@ const CATEGORIA_COR: Record<string, string> = {
   ADMINISTRACAO_BENFEITORIA: 'bg-indigo-100 text-indigo-700',
 }
 
+// Exibe a foto grande o bastante pra dar pra entender a cena, na proporção 16:9 (paisagem)
+// ou 9:16 (retrato) conforme a orientação real da imagem — detectada quando ela carrega.
+function FotoRelatorio({ url, alt }: { url: string; alt: string }) {
+  const [paisagem, setPaisagem] = useState(true)
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" title={alt}
+      className="block self-start rounded-lg overflow-hidden border border-gray-200 flex-shrink-0"
+      style={{ aspectRatio: paisagem ? '16 / 9' : '9 / 16', width: paisagem ? 280 : 158 }}>
+      <img
+        src={url}
+        alt={alt}
+        onLoad={(e) => setPaisagem(e.currentTarget.naturalWidth >= e.currentTarget.naturalHeight)}
+        className="w-full h-full object-cover"
+      />
+    </a>
+  )
+}
+
 export default function RelatorioObraPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
@@ -226,12 +244,9 @@ export default function RelatorioObraPage() {
                     <p className="text-xs text-gray-400">Nenhum lançamento.</p>
                   )}
                   {etapa.fotos.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap items-start gap-3 mt-3">
                       {etapa.fotos.map((f, k) => (
-                        <a key={k} href={f.url} target="_blank" rel="noopener noreferrer" title={f.descricao ?? undefined}>
-                          <img src={f.url} alt={f.descricao ?? `Foto ${k + 1}`}
-                            className="w-20 h-20 object-cover rounded-lg border border-gray-200" />
-                        </a>
+                        <FotoRelatorio key={k} url={f.url} alt={f.descricao ?? `Foto ${k + 1}`} />
                       ))}
                     </div>
                   )}
